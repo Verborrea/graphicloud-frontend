@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+
+@layer components {
+	.btn {
+		@apply cursor-pointer rounded-lg px-5 py-2 font-semibold transition-all active:scale-98;
+		&.btn-primary {
+			@apply bg-blue-600 text-white shadow-lg hover:bg-blue-700 disabled:bg-blue-200;
+		}
+		&.btn-secondary {
+			@apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+		}
+		&:disabled {
+			@apply cursor-not-allowed shadow-none;
+		}
+	}
+	.error {
+		@apply mb-6 rounded-lg border border-red-200 bg-red-100 p-3 text-sm font-medium text-red-700;
+	}
+	.tooltip {
+		@apply pointer-events-none fixed z-50 flex max-w-64 flex-col gap-1 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-bold text-white shadow-xl transition-transform;
+	}
+}
