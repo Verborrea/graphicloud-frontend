@@ -1,4 +1,4 @@
-import type { Result } from "./types";
+import type { Rect, Result } from "./types";
 
 export function convexHull(points: Result[]) {
 	if (points.length <= 1) return points;
@@ -33,4 +33,56 @@ export function convexHull(points: Result[]) {
 	lower.pop();
 	upper.pop();
 	return lower.concat(upper);
+}
+
+function intersects(r1: Rect, r2: Rect): boolean {
+	return !(r2.x > r1.x + r1.w ||
+		r2.x + r2.w < r1.x ||
+		r2.y > r1.y + r1.h ||
+		r2.y + r2.h < r1.y);
+}
+
+export function myWordle(keywords: any[], fontSizeScale: d3.ScalePower<number, number>) {
+	const placedRects: Rect[] = [];
+	const results = [];
+
+	const sorted = [...keywords].sort((a, b) => b.score - a.score);
+
+	for (const kw of sorted) {
+		const fontSize = fontSizeScale(kw.score);
+		// Estimación del ancho del texto (aprox 0.6 del alto por carácter)
+		const w = kw.word.length * (fontSize * 0.55);
+		const h = fontSize;
+
+		let t = 0;
+		const step = 0.5; // Paso de la espiral
+		let placed = false;
+
+		while (!placed && t < 100) { // Límite de seguridad
+			const tx = Math.sin(t) * t * 2;
+			const ty = Math.cos(t) * t * 2;
+
+			const candidate: Rect = {
+				x: tx - w / 2,
+				y: ty - h / 2,
+				w: w,
+				h: h
+			};
+
+			const overlap = placedRects.some(r => intersects(r, candidate));
+
+			if (!overlap) {
+				placedRects.push(candidate);
+				results.push({
+					text: kw.word,
+					size: fontSize,
+					x: tx,
+					y: ty
+				});
+				placed = true;
+			}
+			t += step;
+		}
+	}
+	return results;
 }

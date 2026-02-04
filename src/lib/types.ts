@@ -9,3 +9,10 @@ export interface Result {
 	y: number
 	keywords: KeyWord[]
 }
+
+export interface Rect {
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+}

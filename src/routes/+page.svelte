@@ -11,10 +11,16 @@
 	let uploadProgress = $state(0);
 	let nTop = $state(10);
 	let error = $state<string | null>(null);
-	let results = $state<Result[]>([]);
+	let rawResults = $state<Result[]>([]);
+
+	let filteredResults: Result[] = $derived(
+		rawResults.map((doc) => ({
+			...doc,
+			keywords: doc.keywords.slice(0, nTop)
+		}))
+	);
 
 	let canAnalyze = $derived(files.length >= 3);
-
 	let progressInterval: number;
 
 	function handleDrop(event: DragEvent) {
@@ -44,57 +50,42 @@
 		isLoading = true;
 		uploadProgress = 0;
 		error = null;
-		results = [];
+		rawResults = [];
+
+		progressInterval = setInterval(() => {
+			if (uploadProgress < 95) {
+				uploadProgress += 0.5;
+			}
+		}, 200);
 
 		const formData = new FormData();
 		files.forEach((file) => formData.append('files', file));
 		formData.append('n_top', nTop.toString()); // Enviamos el valor del slider
 
 		try {
-			const xhr = new XMLHttpRequest();
-			xhr.open('POST', 'http://localhost:8000/convert-pdfs/', true);
+			const response = await fetch('http://localhost:8000/convert-pdfs/', {
+				method: 'POST',
+				body: formData
+			});
 
-			// Fase 1: Progreso de subida (mapeado de 0 a 40%)
-			xhr.upload.onprogress = (event) => {
-				if (event.lengthComputable) {
-					uploadProgress = Math.round((event.loaded / event.total) * 40);
-					if (uploadProgress >= 40 && !progressInterval) {
-						startProcessingSimulation();
-					}
-				}
-			};
-
-			// Fase 2: Simulación de procesamiento (de 40 a 95%)
-			function startProcessingSimulation() {
-				progressInterval = setInterval(() => {
-					if (uploadProgress < 95) {
-						// Avanza más lento a medida que se acerca al 95
-						const increment = (95 - uploadProgress) * 0.1;
-						uploadProgress = Math.round(uploadProgress + increment);
-					}
-				}, 400);
+			if (!response.ok) {
+				const errData = await response.json();
+				throw new Error(errData.detail || 'Error en el servidor');
 			}
 
-			xhr.onload = () => {
-				clearInterval(progressInterval);
-				if (xhr.status === 200) {
-					uploadProgress = 100;
-					results = JSON.parse(xhr.responseText);
-				} else {
-					const res = JSON.parse(xhr.responseText);
-					error = `Error (${xhr.status}): ${res.detail || 'Fallo en el servidor'}`;
-				}
-				isLoading = false;
-			};
+			const data = await response.json();
 
-			xhr.onerror = () => {
-				clearInterval(progressInterval);
-				error = 'Error de red. ¿Está el backend en el puerto 8000?';
-				isLoading = false;
-			};
+			// Fin de la carga
+			clearInterval(progressInterval);
+			uploadProgress = 100;
 
-			xhr.send(formData);
+			// Pequeño delay para que el usuario vea el 100% antes de mostrar resultados
+			setTimeout(() => {
+				rawResults = data;
+				isLoading = false;
+			}, 500);
 		} catch (err: any) {
+			clearInterval(progressInterval);
 			error = err.message;
 			isLoading = false;
 		}
@@ -105,7 +96,7 @@
 		isLoading = false;
 		uploadProgress = 0;
 		error = null;
-		results = [];
+		rawResults = [];
 		if (progressInterval) clearInterval(progressInterval);
 	}
 </script>
@@ -116,23 +107,6 @@
 	>
 		<h1 class="text-center text-3xl font-extrabold tracking-tight text-gray-800">GraphiCloud</h1>
 		<FileDropper bind:files {handleDrop} {handleFileSelect} />
-		<div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
-			<div class="mb-2 flex items-center justify-between">
-				<label for="nTop" class="text-sm font-bold text-gray-700"
-					>Palabras clave por documento:</label
-				>
-				<span class="rounded-full bg-blue-600 px-3 py-1 font-mono text-xs text-white">{nTop}</span>
-			</div>
-			<input
-				type="range"
-				id="nTop"
-				min="5"
-				max="30"
-				step="1"
-				bind:value={nTop}
-				class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-blue-200 accent-blue-600"
-			/>
-		</div>
 		{#if isLoading}
 			<LoadingBar {uploadProgress} />
 		{/if}
@@ -147,15 +121,30 @@
 				disabled={isLoading || !canAnalyze}
 				class="btn btn-primary grow"
 			>
-				{canAnalyze ? 'Analizar Documentos' : 'Mínimo 3 Documentos'}
+				{canAnalyze ? 'Send' : '3 documents required'}
 			</button>
-			<button onclick={reset} disabled={isLoading} class="btn btn-secondary"> Limpiar </button>
+			<button onclick={reset} disabled={isLoading} class="btn btn-secondary"> Clear </button>
 		</div>
-		{#if results.length > 0}
-			<DocumentMap docs={results} />
+		<div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
+			<div class="mb-2 flex items-center justify-between">
+				<label for="nTop" class="text-sm font-bold text-gray-700">Keywords by document:</label>
+				<span class="rounded-full bg-blue-600 px-3 py-1 font-mono text-xs text-white">{nTop}</span>
+			</div>
+			<input
+				type="range"
+				id="nTop"
+				min="3"
+				max="30"
+				step="1"
+				bind:value={nTop}
+				class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-blue-200 accent-blue-600"
+			/>
+		</div>
+		{#if filteredResults.length > 0}
+			<DocumentMap docs={filteredResults} />
 			<div class="space-y-3">
 				<h3 class="text-lg font-bold text-gray-800">Detalle por Documento</h3>
-				{#each results as item}
+				{#each filteredResults as item}
 					<DocumentResult {item} />
 				{/each}
 			</div>

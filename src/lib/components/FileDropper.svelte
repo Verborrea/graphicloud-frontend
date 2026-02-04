@@ -20,7 +20,7 @@
 		<span class="">
 			<CloudUpload size="48" />
 		</span>
-		<p class="font-medium">Sueltas los papers o haz click aquí.</p>
+		<p class="font-medium">Click here or drop your files to upload them</p>
 	</div>
 	<input
 		type="file"

@@ -8,7 +8,7 @@
 			class="flex h-full items-center justify-center bg-linear-to-r from-blue-500 to-blue-700 text-[10px] font-bold text-white transition-all duration-300 ease-out"
 			style="width: {uploadProgress}%"
 		>
-			{uploadProgress}%
+			{parseInt(uploadProgress)}%
 		</div>
 	</div>
 	<p class="mt-2 animate-pulse text-center text-xs text-gray-500">

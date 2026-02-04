@@ -1,52 +1,46 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { myWordle } from '$lib/utils';
 	import * as d3 from 'd3';
-	import cloud from 'd3-cloud';
-
-	interface CloudWord extends cloud.Word {
-		text: string;
-		size: number;
-		x: number;
-		y: number;
-		rotate: number;
-	}
 
 	let { keywords, x, y } = $props();
 
-	let words = $state<CloudWord[]>([]);
+	let placedWords = $state<{ text: string; size: number; x: number; y: number }[]>([]);
 
-	const scores: number[] = keywords.map((k: any) => Number(k.score));
+	let scores = $derived(keywords.map((k: any) => k.score));
+	let minScore = $derived(d3.min(scores) ?? 0);
+	let maxScore = $derived(d3.max(scores) ?? 1);
 
-	const minScore = d3.min(scores) ?? 0;
-	const maxScore = d3.max(scores) ?? 1;
+	$effect(() => {
+		if (keywords.length === 0) return;
 
-	onMount(() => {
-		const fontSizeScale = d3.scaleSqrt().domain([minScore, maxScore]).range([10, 36]);
+		const fontSizeScale = d3
+			.scaleSqrt()
+			.domain([minScore, maxScore] as [number, number])
+			.range([10, 32]);
 
-		const layout = cloud()
-			.size([200, 200]) // Mejorar, calcular automáticamente
-			.words(keywords.map((d: any) => ({ text: d.word, size: fontSizeScale(d.score) })))
-			.padding(2)
-			.rotate(() => 0)
-			.font('Inter, sans-serif')
-			.fontSize((d: any) => d.size)
-			.on('end', (computedWords) => {
-				words = computedWords as CloudWord[];
-			});
-
-		layout.start();
+		placedWords = myWordle(keywords, fontSizeScale);
 	});
 </script>
 
 <g transform="translate({x}, {y})">
-	{#each words as word}
+	{#each placedWords as word}
 		<text
-			style="font-size: {word.size}px; font-weight: bold;"
+			style="font-size: {word.size}px; font-weight: 800;"
 			text-anchor="middle"
-			class="pointer-events-none fill-slate-700 transition-all"
-			transform="translate({word.x}, {word.y}) rotate({word.rotate})"
+			alignment-baseline="middle"
+			class="pointer-events-none fill-slate-700 transition-all duration-500 ease-out"
+			transform="translate({word.x}, {word.y})"
 		>
 			{word.text}
 		</text>
 	{/each}
 </g>
+
+<style>
+	text {
+		/* Evita parpadeos bruscos en el re-layout */
+		transition:
+			transform 0.5s ease-out,
+			font-size 0.3s ease;
+	}
+</style>
