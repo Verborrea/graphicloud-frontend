@@ -8,11 +8,11 @@
 
 	let { docs = [] }: { docs: Result[] } = $props();
 
-	// --- Sistema de Capas (Estado Local) ---
 	let layers = $state({
 		hull: true,
 		clouds: true,
-		points: true
+		points: true,
+		bbs: true
 	});
 
 	const width = 600;
@@ -76,6 +76,15 @@
 			{/if}
 			Docs
 		</button>
+
+		<button onclick={() => toggleLayer('bbs')} class="layer-btn" class:active={layers.bbs}>
+			{#if layers.bbs}
+				<Eye size={16} />
+			{:else}
+				<EyeClosed size={16} />
+			{/if}
+			BBS
+		</button>
 	</div>
 
 	<svg viewBox="0 0 {width} {height}" class="h-auto w-full drop-shadow-sm">
@@ -91,7 +100,7 @@
 		{#if layers.clouds}
 			<g transition:fade={{ duration: 300 }}>
 				{#each docs as d}
-					<WordCloud keywords={d.keywords} x={xScale(d.x)} y={yScale(d.y)} />
+					<WordCloud keywords={d.keywords} x={xScale(d.x)} y={yScale(d.y)} showBoxes={layers.bbs} />
 				{/each}
 			</g>
 		{/if}

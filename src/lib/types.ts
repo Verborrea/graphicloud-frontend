@@ -16,3 +16,12 @@ export interface Rect {
 	w: number;
 	h: number;
 }
+
+export interface Word {
+	text: string;
+	size: number;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}

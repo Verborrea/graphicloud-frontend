@@ -50,7 +50,8 @@ export function myWordle(keywords: any[], fontSizeScale: d3.ScalePower<number, n
 
 	for (const kw of sorted) {
 		const fontSize = fontSizeScale(kw.score);
-		// Estimación del ancho del texto (aprox 0.6 del alto por carácter)
+
+		// Estimación del ancho del texto (mejorar)
 		const w = kw.word.length * (fontSize * 0.55);
 		const h = fontSize;
 
@@ -77,7 +78,9 @@ export function myWordle(keywords: any[], fontSizeScale: d3.ScalePower<number, n
 					text: kw.word,
 					size: fontSize,
 					x: tx,
-					y: ty
+					y: ty,
+					width: candidate.w,
+					height: candidate.h
 				});
 				placed = true;
 			}
