@@ -3,6 +3,12 @@ export interface KeyWord {
 	score: number
 }
 
+export interface CloudWord extends KeyWord {
+	size: number
+	realW: number
+	realH: number
+}
+
 export interface Result {
 	filename: string
 	x: number

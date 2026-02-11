@@ -5,6 +5,7 @@
 	import DocumentResult from '$lib/components/DocumentResult.svelte';
 	import DocumentMap from '$lib/components/DocumentMap.svelte';
 	import LoadingBar from '$lib/components/LoadingBar.svelte';
+	import { mockData } from '$lib/mock';
 
 	let files = $state<File[]>([]);
 	let isLoading = $state(false);
@@ -63,17 +64,17 @@
 		formData.append('n_top', nTop.toString()); // Enviamos el valor del slider
 
 		try {
-			const response = await fetch('http://localhost:8000/convert-pdfs/', {
-				method: 'POST',
-				body: formData
-			});
+			// const response = await fetch('http://localhost:8000/convert-pdfs/', {
+			// 	method: 'POST',
+			// 	body: formData
+			// });
 
-			if (!response.ok) {
-				const errData = await response.json();
-				throw new Error(errData.detail || 'Error en el servidor');
-			}
+			// if (!response.ok) {
+			// 	const errData = await response.json();
+			// 	throw new Error(errData.detail || 'Error en el servidor');
+			// }
 
-			const data = await response.json();
+			// const data = await response.json();
 
 			// Fin de la carga
 			clearInterval(progressInterval);
@@ -81,7 +82,8 @@
 
 			// Pequeño delay para que el usuario vea el 100% antes de mostrar resultados
 			setTimeout(() => {
-				rawResults = data;
+				rawResults = mockData;
+				console.log(rawResults);
 				isLoading = false;
 			}, 500);
 		} catch (err: any) {
@@ -103,7 +105,7 @@
 
 <div class="flex min-h-screen items-center justify-center bg-gray-100 p-4 font-sans text-gray-900">
 	<div
-		class="flex w-full max-w-2xl flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-8 shadow-2xl"
+		class="flex w-full max-w-180 flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-8 shadow-2xl"
 	>
 		<h1 class="text-center text-3xl font-extrabold tracking-tight text-gray-800">GraphiCloud</h1>
 		<FileDropper bind:files {handleDrop} {handleFileSelect} />

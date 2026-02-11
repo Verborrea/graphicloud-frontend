@@ -1,4 +1,4 @@
-import type { Rect, Result } from "./types";
+import type { CloudWord, Rect, Result } from "./types";
 
 export function convexHull(points: Result[]) {
 	if (points.length <= 1) return points;
@@ -35,48 +35,43 @@ export function convexHull(points: Result[]) {
 	return lower.concat(upper);
 }
 
-function intersects(r1: Rect, r2: Rect): boolean {
-	return !(r2.x > r1.x + r1.w ||
-		r2.x + r2.w < r1.x ||
-		r2.y > r1.y + r1.h ||
-		r2.y + r2.h < r1.y);
-}
+export function myWordle(measuredKeywords: CloudWord[]) {
+	const placedRects: any[] = [];
+	const results: any[] = [];
 
-export function myWordle(keywords: any[], fontSizeScale: d3.ScalePower<number, number>) {
-	const placedRects: Rect[] = [];
-	const results = [];
-
-	const sorted = [...keywords].sort((a, b) => b.score - a.score);
+	const sorted = [...measuredKeywords].sort((a, b) => b.score - a.score);
 
 	for (const kw of sorted) {
-		const fontSize = fontSizeScale(kw.score);
-
-		// Estimación del ancho del texto (mejorar)
-		const w = kw.word.length * (fontSize * 0.55);
-		const h = fontSize;
+		const w = kw.realW;
+		const h = kw.realH * 0.7;
 
 		let t = 0;
-		const step = 0.5; // Paso de la espiral
+		const step = 0.5;
 		let placed = false;
 
-		while (!placed && t < 100) { // Límite de seguridad
-			const tx = Math.sin(t) * t * 2;
-			const ty = Math.cos(t) * t * 2;
+		while (!placed && t < 200) {
+			const tx = Math.sin(t) * t * 1.2;
+			const ty = Math.cos(t) * t * 1.2;
 
-			const candidate: Rect = {
+			const candidate = {
 				x: tx - w / 2,
 				y: ty - h / 2,
 				w: w,
 				h: h
 			};
 
-			const overlap = placedRects.some(r => intersects(r, candidate));
+			const overlap = placedRects.some(r =>
+				!(candidate.x > r.x + r.w ||
+					candidate.x + candidate.w < r.x ||
+					candidate.y > r.y + r.h ||
+					candidate.y + candidate.h < r.y)
+			);
 
 			if (!overlap) {
 				placedRects.push(candidate);
 				results.push({
 					text: kw.word,
-					size: fontSize,
+					size: kw.size,
 					x: tx,
 					y: ty,
 					width: candidate.w,
@@ -88,4 +83,12 @@ export function myWordle(keywords: any[], fontSizeScale: d3.ScalePower<number, n
 		}
 	}
 	return results;
+}
+
+export function getRandomColor() {
+	const h = Math.floor(Math.random() * 360);
+	const s = 70;
+	const l = 45;
+
+	return `hsl(${h}, ${s}%, ${l}%)`;
 }
