@@ -43,6 +43,9 @@
 		&.secondary {
 			@apply bg-gray-200;
 		}
+		&.destructive {
+			@apply bg-red-200 text-red-800;
+		}
 		&.primary {
 			@apply bg-primary text-gray-50;
 		}

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import Documents from '../blocks/Documents.svelte';
@@ -11,7 +11,7 @@
 
 	let global = $state(false);
 
-	const papers = ['holaaaa', 'adiós', 'último'];
+	let files = $state<File[]>([]);
 </script>
 
 {#if isSidebarOpen}
@@ -19,8 +19,8 @@
 		transition:fly={{ duration: 600, x: -320, opacity: 0, easing: quintOut }}
 		class="fixed left-0 z-1 w-[320px] overflow-y-scroll border-r border-border bg-gray-50 text-sm font-medium"
 	>
-		<Documents />
-		{#if papers}
+		<Documents bind:files />
+		{#if files.length > 0}
 			<Mode bind:global />
 			<Layers />
 			<Settings />

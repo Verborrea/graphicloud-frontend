@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Block from './Block.svelte';
 	import Select from '../ui/Select.svelte';
-	import { fade } from 'svelte/transition';
 
 	const limits = {
 		keywords: { min: 3, max: 30 },
@@ -85,7 +84,7 @@
 				/>
 			</div>
 			{#if errors.keywords}
-				<p transition:fade class="text-[10px] text-red-500">
+				<p class="text-[10px] text-red-500">
 					Debe estar entre {limits.keywords.min} y {limits.keywords.max}
 				</p>
 			{/if}
@@ -136,11 +135,9 @@
 			</div>
 
 			{#if errors.fontRange}
-				<p transition:fade class="text-center text-[10px] text-red-500">
-					Mínimo no puede ser mayor que máximo
-				</p>
+				<p class="text-center text-[10px] text-red-500">Mínimo no puede ser mayor que máximo</p>
 			{:else if errors.fontMin || errors.fontMax}
-				<p transition:fade class="text-center text-[10px] text-red-500">
+				<p class="text-center text-[10px] text-red-500">
 					Rango permitido: {limits.font.min} - {limits.font.max}
 				</p>
 			{/if}
