@@ -1,8 +1,28 @@
 <script>
 	import Block from './Block.svelte';
+
+	let { global = $bindable() } = $props();
 </script>
 
 <Block title="MODE">
-	<div class="px-2">Hola</div>
-	<div class="px-2">Adiós</div>
+	<div class="grid grid-cols-2 gap-2 px-2">
+		<button
+			type="button"
+			class="btn"
+			class:primary={global === false}
+			class:secondary={global !== false}
+			onclick={() => (global = false)}
+		>
+			Local
+		</button>
+		<button
+			type="button"
+			class="btn"
+			class:primary={global === true}
+			class:secondary={global !== true}
+			onclick={() => (global = true)}
+		>
+			Global
+		</button>
+	</div>
 </Block>

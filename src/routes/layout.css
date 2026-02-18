@@ -26,8 +26,17 @@
 }
 
 @layer components {
+	.select {
+		@apply h-10.5 w-full cursor-pointer appearance-none rounded-lg border border-border bg-white px-4 font-medium transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20;
+	}
+	.input {
+		@apply h-9 w-12 rounded-lg border border-border bg-white text-center font-medium outline-none focus:border-primary focus:ring-2 focus:ring-primary/20;
+		&.error {
+			@apply border-red-500 bg-red-50 text-red-500 focus:ring-red-500/20;
+		}
+	}
 	.btn {
-		@apply flex h-10.5 items-center justify-center gap-2 rounded-lg px-3 leading-none;
+		@apply flex h-10.5 items-center justify-center gap-2 rounded-lg px-3 leading-none font-semibold active:scale-95;
 		& > svg {
 			@apply size-4 stroke-[2.5];
 		}
@@ -53,6 +62,18 @@
 			@apply hover:bg-gray-200;
 		}
 	}
+	.range-input {
+		@apply pointer-events-none absolute h-1.5 w-full appearance-none bg-transparent;
+	}
+
+	.range-input::-webkit-slider-thumb {
+		@apply pointer-events-auto size-5 cursor-pointer appearance-none rounded-full border-2 border-primary bg-white shadow-md transition-transform active:scale-110;
+	}
+
+	input[type='range']::-webkit-slider-thumb {
+		@apply size-5 appearance-none rounded-full border-2 border-primary bg-white shadow-md transition-transform active:scale-110;
+	}
+
 	/* .btn {
 		@apply cursor-pointer rounded-lg px-5 py-2 font-semibold transition-all active:scale-98;
 		&.btn-primary {

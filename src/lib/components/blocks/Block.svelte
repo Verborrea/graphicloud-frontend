@@ -17,7 +17,7 @@
 		</h2>
 		<button
 			type="button"
-			class="btn-icon ghost rounded-md p-1 transition-colors hover:bg-gray-100"
+			class="btn-icon ghost -mr-1"
 			onclick={() => (opened = !opened)}
 			aria-expanded={opened}
 			aria-controls="{id}-content"
