@@ -1,7 +1,59 @@
 @import 'tailwindcss';
 
+@theme {
+	--font-sans: 'Geist', sans-serif;
+	--font-mono: 'Geist Mono', monospace;
+
+	--color-primary: #2b7fff;
+	--color-border: oklch(87.2% 0.01 258.338);
+}
+
+@layer utilities {
+	.center {
+		@apply flex items-center justify-center;
+	}
+}
+
+@layer base {
+	:root {
+		@apply bg-gray-100 text-gray-900;
+		font-optical-sizing: auto;
+		overflow: hidden;
+	}
+	button {
+		@apply cursor-pointer transition-all;
+	}
+}
+
 @layer components {
 	.btn {
+		@apply flex h-10.5 items-center justify-center gap-2 rounded-lg px-3 leading-none;
+		& > svg {
+			@apply size-4 stroke-[2.5];
+		}
+		&.secondary {
+			@apply bg-gray-200;
+		}
+		&.primary {
+			@apply bg-primary text-gray-50;
+		}
+		&.ghost {
+			@apply hover:bg-gray-200;
+		}
+	}
+	.btn-icon {
+		@apply rounded-md p-1 active:scale-95;
+		& > svg {
+			@apply size-4 stroke-[2.5];
+		}
+		&.secondary {
+			@apply bg-gray-200;
+		}
+		&.ghost {
+			@apply hover:bg-gray-200;
+		}
+	}
+	/* .btn {
 		@apply cursor-pointer rounded-lg px-5 py-2 font-semibold transition-all active:scale-98;
 		&.btn-primary {
 			@apply bg-blue-600 text-white shadow-lg hover:bg-blue-700 disabled:bg-blue-200;
@@ -24,5 +76,5 @@
 	}
 	.layer-btn.active {
 		@apply bg-blue-50 text-blue-600;
-	}
+	} */
 }
