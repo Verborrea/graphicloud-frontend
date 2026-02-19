@@ -10,6 +10,10 @@
 	let scale = $state(1);
 </script>
 
+<svelte:head>
+	<title>GraphiCloud</title>
+</svelte:head>
+
 <header class="grid grid-cols-[320px_1fr] border-b border-border bg-gray-50 text-sm">
 	<section class="flex items-center justify-between gap-2 border-r border-border p-6">
 		<h1 class="flex items-center gap-2">
