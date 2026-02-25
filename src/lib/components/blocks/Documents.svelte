@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
 	import Block from '$lib/components/blocks/Block.svelte';
 	import ErrorMessage from '$lib/components/ui/ErrorMessage.svelte';
 	import { FileUp, FileText, Trash2, ExternalLink } from '@lucide/svelte';
@@ -29,7 +28,7 @@
 
 		setTimeout(() => {
 			URL.revokeObjectURL(url);
-		}, 60000);
+		}, 30000);
 	};
 
 	const handleDrop = (e: DragEvent) => {
@@ -74,14 +73,13 @@
 	</section>
 {:else}
 	<Block title="DOCUMENTS">
-		<div class="flex max-h-60 flex-col overflow-y-auto pr-1">
+		<div class="flex flex-col">
 			{#each files as file, i (file.name + i)}
 				<div
-					transition:fade={{ duration: 100 }}
 					class="group flex items-center justify-between rounded-lg p-2 hover:bg-gray-100"
 				>
 					<div class="flex flex-1 items-center gap-2 overflow-hidden">
-						<FileText size={16} class="shrink-0 text-gray-400" />
+						<FileText size={16} class="shrink-0 text-gray-400 group-hover:text-gray-900" />
 						<span class="truncate leading-none">{file.name}</span>
 					</div>
 
@@ -110,7 +108,7 @@
 				Clear all
 			</button>
 
-			<label class="btn secondary">
+			<label class="btn secondary cursor-pointer">
 				<input type="file" multiple accept=".pdf" onchange={handleFileInput} class="hidden" />
 				<span>Upload More</span>
 			</label>

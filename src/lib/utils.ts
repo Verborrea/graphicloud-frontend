@@ -92,3 +92,16 @@ export function getRandomColor() {
 
 	return `hsl(${h}, ${s}%, ${l}%)`;
 }
+
+export function handleNumericInput(e: Event, callback: (val: number) => void) {
+	const target = e.target as HTMLInputElement;
+	const cleanValue = target.value.replace(/\D/g, '');
+	const numValue = Number(cleanValue);
+
+	callback(numValue);
+}
+
+export function getProgress(val: number, min: number, max: number) {
+	const clamped = Math.min(Math.max(val, min), max);
+	return ((clamped - min) / (max - min)) * 100;
+};

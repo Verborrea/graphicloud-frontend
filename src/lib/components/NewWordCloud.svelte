@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
 	import * as d3 from 'd3';
-	// Asumo que estas funciones están en tus libs
+
 	import type { KeyWord, Word, CloudWord } from '$lib/types';
 	import { getRandomColor, myWordle } from '$lib/utils';
 

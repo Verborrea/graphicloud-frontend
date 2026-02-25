@@ -41,13 +41,13 @@
 			@apply size-4 stroke-[2.5];
 		}
 		&.secondary {
-			@apply bg-gray-200;
+			@apply bg-gray-200 hover:bg-gray-300;
 		}
 		&.destructive {
-			@apply bg-rose-200 text-rose-600;
+			@apply bg-rose-500 hover:bg-rose-600 text-gray-50;
 		}
 		&.primary {
-			@apply bg-primary text-gray-50;
+			@apply bg-primary hover:bg-[#1c6be0] text-gray-50;
 		}
 		&.ghost {
 			@apply hover:bg-gray-200;
