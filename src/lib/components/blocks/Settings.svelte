@@ -7,6 +7,21 @@
 		font: { min: 10, max: 72 }
 	};
 
+	const fonts = [
+		{
+			value: 'Inter',
+			text: 'Inter'
+		},
+		{
+			value: 'Poppins',
+			text: 'Poppins'
+		},
+		{
+			value: 'Impact',
+			text: 'Impact'
+		}
+	];
+
 	const algorithms = [
 		{
 			value: 'classic',
@@ -26,6 +41,7 @@
 		}
 	];
 
+	let font = $state('Inter');
 	let algorithm = $state('classic');
 	let keywordsCount = $state(20);
 	let fontSize = $state({ min: 16, max: 48 });
@@ -55,6 +71,9 @@
 <Block title="SETTINGS">
 	<div class="flex flex-col gap-3 px-2">
 		<Select name="algo" label="Algorithm" bind:value={algorithm} options={algorithms} />
+
+		<Select name="font" label="Font Family" bind:value={font} options={fonts} />
+
 		<div class="flex flex-col gap-1">
 			<label for="keywords" class="text-sm font-bold">Keywords by document</label>
 			<div class="flex items-center gap-4">
@@ -84,7 +103,7 @@
 				/>
 			</div>
 			{#if errors.keywords}
-				<p class="text-[10px] text-red-500">
+				<p class="text-[10px] text-rose-500">
 					Debe estar entre {limits.keywords.min} y {limits.keywords.max}
 				</p>
 			{/if}
@@ -135,9 +154,9 @@
 			</div>
 
 			{#if errors.fontRange}
-				<p class="text-center text-[10px] text-red-500">Mínimo no puede ser mayor que máximo</p>
+				<p class="text-center text-[10px] text-rose-500">Mínimo no puede ser mayor que máximo</p>
 			{:else if errors.fontMin || errors.fontMax}
-				<p class="text-center text-[10px] text-red-500">
+				<p class="text-center text-[10px] text-rose-500">
 					Rango permitido: {limits.font.min} - {limits.font.max}
 				</p>
 			{/if}

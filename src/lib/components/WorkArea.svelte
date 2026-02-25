@@ -1,31 +1,39 @@
 <script lang="ts">
-	import { MousePointer2 } from '@lucide/svelte';
+	import NewWordCloud from './NewWordCloud.svelte';
+
+	const zoomSpeed = 0.001;
+	const minZoom = 0.1;
+	const maxZoom = 5;
 
 	let { offset = $bindable(), scale = $bindable() } = $props();
 
-	let isDraggingCanvas = $state(false);
+	let isDragging = $state(false);
+
+	let keywords = $state([
+		{ word: 'Svelte', score: 100 },
+		{ word: 'D3.js', score: 80 },
+		{ word: 'Tailwind', score: 60 },
+		{ word: 'TypeScript', score: 90 },
+		{ word: 'Canvas', score: 40 },
+		{ word: 'Zoom', score: 70 }
+	]);
 
 	const handleMouseDown = (e: any) => {
-		if (e.button === 0) isDraggingCanvas = true;
+		if (e.button === 0) isDragging = true;
 	};
 
 	const handleMouseMove = (e: any) => {
-		if (isDraggingCanvas) {
+		if (isDragging) {
 			offset.x += e.movementX;
 			offset.y += e.movementY;
 		}
 	};
 
-	const stopDragging = () => (isDraggingCanvas = false);
+	const stopDragging = () => (isDragging = false);
 
-	// --- LÓGICA DE ZOOM ---
 	const handleWheel = (e: any) => {
 		e.preventDefault();
-		const zoomSpeed = 0.001;
-		const delta = -e.deltaY;
-		const newScale = scale + delta * zoomSpeed;
-		// Limitar zoom entre 0.1x y 5x
-		scale = Math.min(Math.max(0.1, newScale), 5);
+		scale = Math.min(Math.max(minZoom, scale - e.deltaY * zoomSpeed), maxZoom);
 	};
 </script>
 
@@ -48,23 +56,9 @@
 	<div
 		class="pointer-events-none absolute inset-0 flex items-center justify-center"
 		style:transform="translate({offset.x}px, {offset.y}px) scale({scale})"
-		style:transform-origin="center"
 	>
-		<div class="group pointer-events-auto relative">
-			<div
-				class="flex h-48 w-48 items-center justify-center rounded-full border-[3px] border-blue-500 bg-white shadow-2xl transition-transform group-hover:scale-105"
-			>
-				<div
-					class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg"
-				>
-					<MousePointer2 size={20} fill="currentColor" />
-				</div>
-			</div>
-			<div
-				class="absolute -bottom-10 left-1/2 -translate-x-1/2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold whitespace-nowrap shadow-sm"
-			>
-				CENTRAL_NODE_01
-			</div>
-		</div>
+		<svg class="pointer-events-auto overflow-visible">
+			<NewWordCloud {keywords} min={20} max={80} showBoxes={false} />
+		</svg>
 	</div>
 </main>

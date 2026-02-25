@@ -9,7 +9,7 @@
 		type="button"
 		onclick={() => (scale = 1)}
 		class="btn-icon secondary px-5 py-1.5 leading-none"
-		aria-label="More zoom">Reset Zoom</button
+		aria-label="Reset zoom">Reset Zoom</button
 	>
 	<button
 		type="button"
