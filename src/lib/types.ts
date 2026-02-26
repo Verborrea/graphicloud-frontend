@@ -1,3 +1,23 @@
+export interface CloudStateType {
+	files: File[];
+	global: boolean;
+	layers: {
+		docs: boolean;
+		hull: boolean;
+		wc: boolean;
+		bb: boolean;
+	};
+	font: string;
+	algorithm: string;
+	keywordsCount: number;
+	minFontSize: number;
+	maxFontSize: number;
+	theme: number;
+}
+
+
+// Old stuff
+
 export interface KeyWord {
 	word: string
 	score: number

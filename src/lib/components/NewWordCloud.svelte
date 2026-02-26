@@ -3,8 +3,9 @@
 
 	import type { KeyWord, Word, CloudWord } from '$lib/types';
 	import { getRandomColor, myWordle } from '$lib/utils';
+	import { cloudState } from '$lib/state.svelte';
 
-	let { keywords = [], min = 12, max = 48, showBoxes = false } = $props();
+	let { keywords = [] } = $props();
 
 	let placedWords = $state<Word[]>([]);
 	let measureGrp = $state<SVGGElement>();
@@ -20,7 +21,7 @@
 		const fontSizeScale = d3
 			.scaleSqrt()
 			.domain([minScore, maxScore] as [number, number])
-			.range([min, max]);
+			.range([cloudState.minFontSize, cloudState.maxFontSize]);
 
 		const measuredData: CloudWord[] = keywords.map((kw: KeyWord) => {
 			const size = fontSizeScale(kw.score);
@@ -35,7 +36,7 @@
 			const bbox = t.getBBox();
 			measureGrp?.removeChild(t);
 
-			return { ...kw, size, realW: bbox.width, realH: bbox.height };
+			return { ...kw, size: fontSizeScale(kw.score), realW: bbox.width, realH: bbox.height };
 		});
 
 		// Tu función de layout
@@ -48,7 +49,7 @@
 
 	{#each placedWords as word}
 		<g transform="translate({word.x}, {word.y})">
-			{#if showBoxes}
+			{#if cloudState.layers.bb}
 				<rect
 					x={-word.width / 2}
 					y={-word.height / 2}

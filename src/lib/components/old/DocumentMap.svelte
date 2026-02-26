@@ -5,7 +5,7 @@
 	import WordCloud from './WordCloud.svelte';
 	import { fade } from 'svelte/transition';
 	import Layers from './Layers.svelte';
-	import Tooltip from './Tooltip.svelte';
+	import Tooltip from '../ui/Tooltip.svelte';
 	import FontSize from './FontSize.svelte';
 
 	let { docs = [] }: { docs: Result[] } = $props();

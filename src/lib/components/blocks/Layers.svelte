@@ -1,14 +1,14 @@
 <script>
-	import Block from './Block.svelte';
-	import LayerItem from '../ui/LayerItem.svelte';
-
-	let { layers = $bindable() } = $props();
+	import Block from '$lib/components/blocks/Block.svelte';
+	import LayerItem from '$lib/components/ui/LayerItem.svelte';
+	import { cloudState } from '$lib/state.svelte';
 </script>
 
 <Block title="LAYERS">
 	<div class="flex flex-col gap-0.5">
-		{#each layers as layer (layer.name)}
-			<LayerItem label={layer.name} bind:checked={layer.active} />
-		{/each}
+		<LayerItem label="Documents" bind:checked={cloudState.layers.docs} />
+		<LayerItem label="Convex Hull" bind:checked={cloudState.layers.hull} />
+		<LayerItem label={cloudState.global ? 'Cloud' : 'Clouds'} bind:checked={cloudState.layers.wc} />
+		<LayerItem label="Bounding Boxes" bind:checked={cloudState.layers.bb} />
 	</div>
 </Block>

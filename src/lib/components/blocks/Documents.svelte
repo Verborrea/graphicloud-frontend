@@ -1,9 +1,8 @@
 <script lang="ts">
 	import Block from '$lib/components/blocks/Block.svelte';
 	import ErrorMessage from '$lib/components/ui/ErrorMessage.svelte';
+	import { cloudState } from '$lib/state.svelte';
 	import { FileUp, FileText, Trash2, ExternalLink } from '@lucide/svelte';
-
-	let { files = $bindable([]) }: { files: File[] } = $props();
 
 	let isDragging = $state(false);
 	let errorMessage = $state('');
@@ -18,7 +17,7 @@
 			return true;
 		});
 
-		files = [...files, ...pdfs];
+		cloudState.files = [...cloudState.files, ...pdfs];
 		if (errorMessage) setTimeout(() => (errorMessage = ''), 3000);
 	};
 
@@ -43,7 +42,7 @@
 	};
 </script>
 
-{#if files.length === 0}
+{#if cloudState.files.length === 0}
 	<section class="flex h-full flex-col gap-4 p-6">
 		<h2 class="text-xs leading-5.5 font-bold tracking-wide text-gray-400 uppercase">DOCUMENTS</h2>
 		<div
@@ -74,10 +73,8 @@
 {:else}
 	<Block title="DOCUMENTS">
 		<div class="flex flex-col">
-			{#each files as file, i (file.name + i)}
-				<div
-					class="group flex items-center justify-between rounded-lg p-2 hover:bg-gray-100"
-				>
+			{#each cloudState.files as file, i (file.name + i)}
+				<div class="group flex items-center justify-between rounded-lg p-2 hover:bg-gray-100">
 					<div class="flex flex-1 items-center gap-2 overflow-hidden">
 						<FileText size={16} class="shrink-0 text-gray-400 group-hover:text-gray-900" />
 						<span class="truncate leading-none">{file.name}</span>
@@ -92,7 +89,7 @@
 							<ExternalLink size={16} strokeWidth={2.5} />
 						</button>
 						<button
-							onclick={() => (files = files.filter((_, idx) => idx !== i))}
+							onclick={() => (cloudState.files = cloudState.files.filter((_, idx) => idx !== i))}
 							class="-my-1 p-1.5 text-gray-400 opacity-0 transition-all group-hover:opacity-100 hover:text-rose-500"
 							title="Eliminar"
 						>
@@ -104,7 +101,7 @@
 		</div>
 
 		<div class="mt-2 grid grid-cols-2 gap-2">
-			<button type="button" onclick={() => (files = [])} class="btn destructive">
+			<button type="button" onclick={() => (cloudState.files = [])} class="btn destructive">
 				Clear all
 			</button>
 

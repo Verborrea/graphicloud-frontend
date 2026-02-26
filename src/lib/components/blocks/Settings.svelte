@@ -2,18 +2,19 @@
 	import Block from '$lib/components/blocks/Block.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { algorithms, limits } from '$lib/const';
+	import { cloudState } from '$lib/state.svelte';
 	import { handleNumericInput, getProgress } from '$lib/utils';
 
-	let { algorithm = $bindable(), keywordsCount = $bindable() } = $props();
-
 	let errors = $derived({
-		keywords: keywordsCount < limits.keywords.min || keywordsCount > limits.keywords.max
+		keywords:
+			cloudState.keywordsCount < limits.keywords.min ||
+			cloudState.keywordsCount > limits.keywords.max
 	});
 </script>
 
 <Block title="SETTINGS">
 	<div class="flex flex-col gap-3 px-2">
-		<Select name="algo" label="Algorithm" bind:value={algorithm} options={algorithms} />
+		<Select name="algo" label="Algorithm" bind:value={cloudState.algorithm} options={algorithms} />
 		<div class="flex flex-col gap-1">
 			<label for="keywords" class="text-sm font-bold">Keywords by document</label>
 			<div class="flex items-center gap-4">
@@ -24,20 +25,20 @@
 						type="range"
 						min={limits.keywords.min}
 						max={limits.keywords.max}
-						bind:value={keywordsCount}
+						bind:value={cloudState.keywordsCount}
 						class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 accent-primary"
 						style="background: linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) {getProgress(
-							keywordsCount,
+							cloudState.keywordsCount,
 							limits.keywords.min,
 							limits.keywords.max
-						)}%, #e5e7eb {getProgress(keywordsCount, 3, 30)}%, #e5e7eb 100%)"
+						)}%, #e5e7eb {getProgress(cloudState.keywordsCount, 3, 30)}%, #e5e7eb 100%)"
 					/>
 				</div>
 				<span>{limits.keywords.max}</span>
 				<input
 					type="text"
-					value={keywordsCount}
-					oninput={(e) => handleNumericInput(e, (v) => (keywordsCount = v))}
+					value={cloudState.keywordsCount}
+					oninput={(e) => handleNumericInput(e, (v) => (cloudState.keywordsCount = v))}
 					class="input"
 					class:error={errors.keywords}
 				/>

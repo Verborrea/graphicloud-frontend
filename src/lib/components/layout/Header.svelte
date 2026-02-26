@@ -1,8 +1,13 @@
 <script>
-	import { Cloud, PanelLeft } from '@lucide/svelte';
-	import ZoomControl from './ZoomControl.svelte';
+	import { Cloud, Minus, PanelLeft, Plus } from '@lucide/svelte';
 
 	let { offset, scale = $bindable(), isSidebarOpen = $bindable() } = $props();
+
+	function reset() {
+		offset.x = 0;
+		offset.y = 0;
+		scale = 1;
+	}
 </script>
 
 <header class="grid grid-cols-[320px_1fr] border-b border-border bg-gray-50 text-sm">
@@ -22,8 +27,28 @@
 		</button>
 	</section>
 	<section class="flex items-center justify-end gap-6 p-6 font-mono font-medium">
+		<button
+			type="button"
+			onclick={reset}
+			class="btn-icon secondary px-5 py-1.5 leading-none"
+			aria-label="Reset zoom">Reset View</button
+		>
 		<span>x: {Math.round(offset.x)}</span>
 		<span>y: {Math.round(offset.y)}</span>
-		<ZoomControl bind:scale />
+		<div class="flex items-center gap-2">
+			<button
+				type="button"
+				onclick={() => (scale = Math.max(0.1, scale - 0.1))}
+				class="btn-icon secondary"
+				aria-label="Less zoom"><Minus /></button
+			>
+			<span class="w-9 text-center font-mono">{Math.round(scale * 100)}%</span>
+			<button
+				type="button"
+				onclick={() => (scale = Math.min(5, scale + 0.1))}
+				class="btn-icon secondary"
+				aria-label="More zoom"><Plus /></button
+			>
+		</div>
 	</section>
 </header>
