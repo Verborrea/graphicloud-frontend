@@ -7,23 +7,25 @@
 
 	let { keywords = [] } = $props();
 
+	const topNKeywords = $derived(keywords.slice(0, cloudState.keywordsCount));
+
 	let placedWords = $state<Word[]>([]);
 	let measureGrp = $state<SVGGElement>();
 
-	let scores = $derived(keywords.map((k) => k.score));
+	let scores = $derived(topNKeywords.map((k) => k.score));
 	let minScore = $derived(d3.min(scores) ?? 0);
 	let maxScore = $derived(d3.max(scores) ?? 1);
 	const color = getRandomColor();
 
 	$effect(() => {
-		if (keywords.length === 0 || !measureGrp) return;
+		if (topNKeywords.length === 0 || !measureGrp) return;
 
 		const fontSizeScale = d3
 			.scaleSqrt()
 			.domain([minScore, maxScore] as [number, number])
 			.range([cloudState.minFontSize, cloudState.maxFontSize]);
 
-		const measuredData: CloudWord[] = keywords.map((kw: KeyWord) => {
+		const measuredData: CloudWord[] = topNKeywords.map((kw: KeyWord) => {
 			const size = fontSizeScale(kw.score);
 			// Creamos elemento temporal para medir
 			const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -39,8 +41,7 @@
 			return { ...kw, size: fontSizeScale(kw.score), realW: bbox.width, realH: bbox.height };
 		});
 
-		// Tu función de layout
-		placedWords = myWordle(measuredData);
+		placedWords = myWordle(measuredData, cloudState.algorithm);
 	});
 </script>
 

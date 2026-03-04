@@ -6,9 +6,6 @@
 
 	let { onHover, onMove, onLeave } = $props();
 
-	const range = 1000;
-	const padding = 0;
-
 	const locals = $derived(cloudState.results?.locals ?? []);
 	const globals = $derived(cloudState.results?.global ?? []);
 	const hullPoints = $derived(locals.length >= 3 ? convexHull(locals) : []);
@@ -21,27 +18,17 @@
 			.curve(d3.curveLinearClosed)
 	);
 
-	const xScale = $derived(
-		d3
-			.scaleLinear()
-			.domain([0, 1])
-			.range([padding, range - padding])
-	);
-	const yScale = $derived(
-		d3
-			.scaleLinear()
-			.domain([0, 1])
-			.range([range - padding, padding])
-	);
+	const xScale = $derived(d3.scaleLinear().domain([0, 1]).range([0, cloudState.range]));
+	const yScale = $derived(d3.scaleLinear().domain([0, 1]).range([cloudState.range, 0]));
 </script>
 
 <svg
-	viewBox="0 0 {range} {range}"
-	class="pointer-events-auto h-200 w-200 overflow-visible bg-blue-50"
+	viewBox="0 0 {cloudState.range} {cloudState.range}"
+	class="pointer-events-auto h-200 w-200 overflow-visible"
 >
 	{#if cloudState.global}
 		{#if cloudState.layers.wc}
-			<g transform="translate({range / 2}, {range / 2})">
+			<g transform="translate({cloudState.range / 2}, {cloudState.range / 2})">
 				<NewWordCloud keywords={globals} />
 			</g>
 		{/if}

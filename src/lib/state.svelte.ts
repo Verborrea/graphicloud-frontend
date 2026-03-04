@@ -12,9 +12,10 @@ export const cloudState = $state<CloudStateType>({
 		bb: true,
 	},
 	font: 'Inter',
-	algorithm: 'classic',
-	keywordsCount: 20,
-	minFontSize: 16,
-	maxFontSize: 48,
+	algorithm: 'mani',
+	keywordsCount: 10,
+	minFontSize: 12,
+	maxFontSize: 36,
+	range: 1000,
 	theme: 0
 });

@@ -10,10 +10,11 @@ export interface CloudStateType {
 		bb: boolean;
 	};
 	font: string;
-	algorithm: string;
+	algorithm: 'mani' | 'rl' | 'rc';
 	keywordsCount: number;
 	minFontSize: number;
 	maxFontSize: number;
+	range: number;
 	theme: number;
 }
 

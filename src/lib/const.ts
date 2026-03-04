@@ -1,4 +1,5 @@
 export const limits = {
+	range: { min: 500, max: 4000 },
 	keywords: { min: 3, max: 30 },
 	font: { min: 10, max: 72 },
 	zoom: { min: 0.1, max: 5 }
@@ -16,16 +17,12 @@ export const fonts = [
 		text: 'Poppins'
 	},
 	{
-		value: 'Impact',
-		text: 'Impact'
+		value: 'Anton',
+		text: 'Anton'
 	}
 ];
 
 export const algorithms = [
-	{
-		value: 'classic',
-		text: 'Classic Wordle'
-	},
 	{
 		value: 'mani',
 		text: 'ManiWordle'

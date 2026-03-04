@@ -2,7 +2,7 @@
 	import { limits, zoomSpeed } from '$lib/const';
 
 	import Tooltip from '$lib/components/ui/Tooltip.svelte';
-	import Clouds from './layout/Clouds.svelte';
+	import Clouds from './Clouds.svelte';
 	import { cloudState } from '$lib/state.svelte';
 	import { Loader } from '@lucide/svelte';
 
