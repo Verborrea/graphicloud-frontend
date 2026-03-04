@@ -40,6 +40,40 @@
 		const target = e.target as HTMLInputElement;
 		if (target.files) validateAndAddFiles(target.files);
 	};
+
+	$effect(() => {
+		const files = cloudState.files;
+
+		// Solo disparamos si hay archivos (mínimo 1 para el mock, 3 para el real)
+		if (files.length > 0) {
+			fetchBackend(files);
+		} else {
+			cloudState.results = null;
+		}
+	});
+
+	async function fetchBackend(files: File[]) {
+		cloudState.isLoading = true;
+
+		const formData = new FormData();
+		files.forEach((file) => formData.append('files', file));
+
+		try {
+			const response = await fetch('http://localhost:8000/convert-pdfs/', {
+				method: 'POST',
+				body: formData
+			});
+
+			if (!response.ok) throw new Error('Error en el servidor');
+
+			const data = await response.json();
+			cloudState.results = data;
+		} catch (error) {
+			console.error('Error fetching mock:', error);
+		} finally {
+			cloudState.isLoading = false;
+		}
+	}
 </script>
 
 {#if cloudState.files.length === 0}

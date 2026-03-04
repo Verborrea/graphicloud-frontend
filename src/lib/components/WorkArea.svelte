@@ -1,64 +1,86 @@
 <script lang="ts">
 	import { limits, zoomSpeed } from '$lib/const';
-	import { mockData } from '$lib/newMockData';
-	import { cloudState } from '$lib/state.svelte';
-	import { convexHull } from '$lib/utils';
-	import * as d3 from 'd3';
 
-	import NewWordCloud from './NewWordCloud.svelte';
 	import Tooltip from '$lib/components/ui/Tooltip.svelte';
+	import Clouds from './layout/Clouds.svelte';
+	import { cloudState } from '$lib/state.svelte';
+	import { Loader } from '@lucide/svelte';
+
+	let { offset = $bindable(), scale = $bindable() } = $props();
 
 	let isDragging = $state(false);
-	let { offset = $bindable(), scale = $bindable() } = $props();
+	let container = $state<HTMLElement | null>(null);
 	let tooltip = $state({ x: 0, y: 0, visible: false, text: '', coords: [0, 0] });
 
-	const range = 1000;
-	const padding = 0;
+	let centerX = $derived(container ? container.clientWidth / 2 : 0);
+	let centerY = $derived(container ? container.clientHeight / 2 : 0);
+	let bgPosX = $derived(centerX + offset.x);
+	let bgPosY = $derived(centerY + offset.y);
+	let gridSize = $derived(20 * scale);
 
-	const xScale = $derived(
-		d3
-			.scaleLinear()
-			.domain([0, 1])
-			.range([padding, range - padding])
-	);
-	const yScale = $derived(
-		d3
-			.scaleLinear()
-			.domain([0, 1])
-			.range([range - padding, padding])
-	);
-
-	const hullPoints = $derived(mockData.locals.length >= 3 ? convexHull(mockData.locals) : []);
-	const lineGenerator = $derived(
-		d3
-			.line<any>()
-			.x((d) => xScale(d.x))
-			.y((d) => yScale(d.y))
-			.curve(d3.curveLinearClosed)
-	);
-
-	const handleMouseDown = (e: any) => {
+	const handleMouseDown = (e: MouseEvent) => {
 		if (e.button === 0) isDragging = true;
 	};
 
-	const handleMouseMove = (e: any) => {
+	const handleMouseMove = (e: MouseEvent) => {
 		if (isDragging) {
 			offset.x += e.movementX;
 			offset.y += e.movementY;
 		}
 	};
 
+	const handleWheel = (e: WheelEvent) => {
+		e.preventDefault();
+		if (!container) return;
+
+		const rect = container.getBoundingClientRect();
+
+		// 1. Posición del mouse relativa al centro del contenedor (donde ocurre el transform)
+		const mouseX = e.clientX - rect.left - rect.width / 2;
+		const mouseY = e.clientY - rect.top - rect.height / 2;
+
+		// 2. Guardamos la escala anterior y calculamos la nueva
+		const oldScale = scale;
+		const newScale = Math.min(
+			Math.max(limits.zoom.min, scale - e.deltaY * zoomSpeed * (scale / 2)), // Ajuste de sensibilidad
+			limits.zoom.max
+		);
+
+		if (oldScale === newScale) return;
+
+		// 3. La "magia": Ajustamos el offset para compensar el desplazamiento del punto bajo el mouse
+		// Fórmula: nuevoOffset = mouse - (mouse - viejoOffset) * (nuevaEscala / viejaEscala)
+		const ratio = newScale / oldScale;
+
+		offset.x = mouseX - (mouseX - offset.x) * ratio;
+		offset.y = mouseY - (mouseY - offset.y) * ratio;
+
+		scale = newScale;
+	};
+
 	const stopDragging = () => (isDragging = false);
 
-	const handleWheel = (e: any) => {
-		e.preventDefault();
-		scale = Math.min(Math.max(limits.zoom.min, scale - e.deltaY * zoomSpeed), limits.zoom.max);
+	// Tooltip code:
+
+	const onHover = (e: any, doc: any) =>
+		(tooltip = {
+			x: e.clientX,
+			y: e.clientY,
+			visible: true,
+			text: doc.filename,
+			coords: [doc.x, doc.y]
+		});
+	const onMove = (e: any) => {
+		tooltip.x = e.clientX;
+		tooltip.y = e.clientY;
 	};
+	const onLeave = () => (tooltip.visible = false);
 </script>
 
 <main
+	bind:this={container}
 	role="presentation"
-	class="relative flex-1 cursor-grab overflow-hidden bg-gray-100 select-none active:cursor-grabbing"
+	class="relative flex-1 cursor-grab overflow-hidden bg-white select-none active:cursor-grabbing"
 	onmousedown={handleMouseDown}
 	onmousemove={handleMouseMove}
 	onmouseup={stopDragging}
@@ -67,66 +89,25 @@
 >
 	<div
 		class="pointer-events-none absolute inset-0"
-		style:background-image="radial-gradient(var(--color-gray-400) 1px, transparent 1px)"
-		style:background-size="16px 16px"
-		style:background-position="{offset.x}px {offset.y}px"
+		style:background-image="radial-gradient(var(--color-gray-300) 1px, transparent 1px)"
+		style:background-size="{gridSize}px {gridSize}px"
+		style:background-position="{bgPosX}px {bgPosY}px"
 	></div>
+
 	<div
 		class="pointer-events-none absolute inset-0 flex items-center justify-center"
 		style:transform="translate({offset.x}px, {offset.y}px) scale({scale})"
 	>
-		<svg
-			viewBox="0 0 {range} {range}"
-			class="pointer-events-auto h-200 w-200 overflow-visible bg-red-100"
-		>
-			{#if cloudState.global}
-				<g transform="translate({range / 2}, {range / 2})">
-					<NewWordCloud keywords={mockData.global} />
-				</g>
-			{:else}
-				{#if cloudState.layers.hull && hullPoints.length > 0}
-					<path
-						d={lineGenerator(hullPoints)}
-						class="pointer-events-none fill-blue-400/10 stroke-blue-500/30 stroke-[4px]"
-						style="stroke-dasharray: 10,10"
-					/>
-				{/if}
-
-				{#if cloudState.layers.wc}
-					{#each mockData.locals as doc}
-						<g transform="translate({xScale(doc.x)}, {yScale(doc.y)})">
-							<NewWordCloud keywords={doc.keywords} />
-						</g>
-					{/each}
-				{/if}
-
-				{#if cloudState.layers.docs}
-					{#each mockData.locals as doc}
-						<circle
-							role="presentation"
-							cx={xScale(doc.x)}
-							cy={yScale(doc.y)}
-							r="8"
-							class="cursor-pointer fill-blue-600 transition-colors hover:fill-orange-500"
-							onmouseenter={(e) =>
-								(tooltip = {
-									x: e.clientX,
-									y: e.clientY,
-									visible: true,
-									text: doc.filename,
-									coords: [doc.x, doc.y]
-								})}
-							onmousemove={(e) => {
-								tooltip.x = e.clientX;
-								tooltip.y = e.clientY;
-							}}
-							onmouseleave={() => (tooltip.visible = false)}
-						/>
-					{/each}
-				{/if}
-			{/if}
-		</svg>
+		{#if cloudState.isLoading}
+			<div class="flex animate-pulse flex-col items-center gap-2 text-primary">
+				<Loader class="animate-spin" size={48} />
+				<span class="font-bold">Procesando documentos...</span>
+			</div>
+		{:else if cloudState.results}
+			<Clouds {onHover} {onMove} {onLeave} />
+		{/if}
 	</div>
+
 	{#if tooltip.visible}
 		<Tooltip {tooltip} />
 	{/if}

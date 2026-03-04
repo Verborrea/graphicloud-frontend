@@ -2,6 +2,8 @@ import type { CloudStateType } from "./types";
 
 export const cloudState = $state<CloudStateType>({
 	files: [],
+	results: null,
+	isLoading: false,
 	global: false,
 	layers: {
 		docs: true,

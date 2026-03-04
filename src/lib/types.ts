@@ -1,5 +1,7 @@
 export interface CloudStateType {
 	files: File[];
+	results: { global: any[], locals: any[] } | null;
+	isLoading: boolean;
 	global: boolean;
 	layers: {
 		docs: boolean;
