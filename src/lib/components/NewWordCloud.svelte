@@ -27,11 +27,11 @@
 
 		const measuredData: CloudWord[] = topNKeywords.map((kw: KeyWord) => {
 			const size = fontSizeScale(kw.score);
-			// Creamos elemento temporal para medir
+
 			const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 			t.style.fontSize = `${size}px`;
-			t.style.fontWeight = '800';
-			t.style.fontFamily = 'Inter, sans-serif';
+			// t.style.fontWeight = '800';
+			t.style.fontFamily = cloudState.font;
 			t.textContent = kw.word;
 
 			measureGrp?.appendChild(t);
@@ -62,20 +62,13 @@
 				/>
 			{/if}
 			<text
-				style="font-size: {word.size}px;"
+				style="font-size: {word.size}px; font-family: {cloudState.font}; paint-order: stroke;"
 				text-anchor="middle"
 				dominant-baseline="central"
-				class="fill-slate-700 font-extrabold transition-all duration-500 select-none"
+				class="fill-slate-700 font-extrabold select-none"
 			>
 				{word.text}
 			</text>
 		</g>
 	{/each}
 </g>
-
-<style>
-	text {
-		font-family: 'Inter', sans-serif;
-		paint-order: stroke;
-	}
-</style>

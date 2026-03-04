@@ -11,7 +11,7 @@ export const cloudState = $state<CloudStateType>({
 		wc: true,
 		bb: true,
 	},
-	font: 'Inter',
+	font: 'Anton',
 	algorithm: 'mani',
 	keywordsCount: 10,
 	minFontSize: 12,
