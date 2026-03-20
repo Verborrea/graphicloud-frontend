@@ -101,7 +101,7 @@
 		{#if cloudState.isLoading}
 			<div class="flex animate-pulse flex-col items-center gap-2 text-primary">
 				<Loader class="animate-spin" size={48} />
-				<span class="font-bold">Procesando documentos...</span>
+				<span class="font-bold">Loading...</span>
 			</div>
 		{:else if cloudState.results}
 			<Clouds {onHover} {onMove} {onLeave} />
