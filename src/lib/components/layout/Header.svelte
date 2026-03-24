@@ -1,5 +1,6 @@
 <script>
-	import { Cloud, Minus, PanelLeft, Plus } from '@lucide/svelte';
+	import { selectState } from '$lib/state.svelte';
+	import { Cloud, Minus, PanelLeft, Plus, SquareDashedMousePointer } from '@lucide/svelte';
 
 	let { offset, scale = $bindable(), isSidebarOpen = $bindable() } = $props();
 
@@ -26,29 +27,47 @@
 			<PanelLeft />
 		</button>
 	</section>
-	<section class="flex items-center justify-end gap-6 p-6 font-mono font-medium">
+	<section class="flex h-18.5 items-center justify-between gap-6 px-6">
 		<button
 			type="button"
-			onclick={reset}
-			class="btn-icon secondary px-5 py-1.5 leading-none"
-			aria-label="Reset zoom">Reset View</button
+			class="btn-icon p-2"
+			class:primary={selectState.active}
+			class:secondary={!selectState.active}
+			title="Modo selección lazo"
+			onclick={() => {
+				selectState.active = !selectState.active;
+				if (!selectState.active) {
+					selectState.words = [];
+					selectState.lassoPoints = [];
+				}
+			}}
 		>
-		<span>x: {Math.round(offset.x)}</span>
-		<span>y: {Math.round(offset.y)}</span>
-		<div class="flex items-center gap-2">
+			<SquareDashedMousePointer size={16} />
+		</button>
+		<div class="flex items-center gap-6 font-mono font-medium">
 			<button
 				type="button"
-				onclick={() => (scale = Math.max(0.1, scale - 0.1))}
-				class="btn-icon secondary"
-				aria-label="Less zoom"><Minus /></button
+				onclick={reset}
+				class="btn-icon secondary px-5 py-1.5 leading-none"
+				aria-label="Reset zoom">Reset View</button
 			>
-			<span class="w-9 text-center font-mono">{Math.round(scale * 100)}%</span>
-			<button
-				type="button"
-				onclick={() => (scale = Math.min(5, scale + 0.1))}
-				class="btn-icon secondary"
-				aria-label="More zoom"><Plus /></button
-			>
+			<span>x: {Math.round(offset.x)}</span>
+			<span>y: {Math.round(offset.y)}</span>
+			<div class="flex items-center gap-2">
+				<button
+					type="button"
+					onclick={() => (scale = Math.max(0.1, scale - 0.1))}
+					class="btn-icon secondary"
+					aria-label="Less zoom"><Minus /></button
+				>
+				<span class="w-9 text-center font-mono">{Math.round(scale * 100)}%</span>
+				<button
+					type="button"
+					onclick={() => (scale = Math.min(5, scale + 0.1))}
+					class="btn-icon secondary"
+					aria-label="More zoom"><Plus /></button
+				>
+			</div>
 		</div>
 	</section>
 </header>

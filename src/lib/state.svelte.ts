@@ -19,3 +19,12 @@ export const cloudState = $state<CloudStateType>({
 	range: 1000,
 	theme: 0
 });
+
+export const selectState = $state({
+	active: false,
+	isDrawing: false,
+	lassoPoints: [] as { x: number; y: number }[],
+	words: [] as { text: string; score: number; cloudId: string }[],
+	svgOverlay: null as string | null,
+	isLoadingImage: false,
+})

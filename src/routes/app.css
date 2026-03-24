@@ -44,10 +44,10 @@
 			@apply bg-gray-200 hover:bg-gray-300;
 		}
 		&.destructive {
-			@apply bg-rose-500 hover:bg-rose-600 text-gray-50;
+			@apply bg-rose-500 text-gray-50 hover:bg-rose-600;
 		}
 		&.primary {
-			@apply bg-primary hover:bg-[#1c6be0] text-gray-50;
+			@apply bg-primary text-gray-50 hover:bg-[#1c6be0];
 		}
 		&.ghost {
 			@apply hover:bg-gray-200;
@@ -57,6 +57,9 @@
 		@apply rounded-md p-1 active:scale-95;
 		& > svg {
 			@apply size-4 stroke-[2.5];
+		}
+		&.primary {
+			@apply bg-primary text-gray-50 hover:bg-[#1c6be0];
 		}
 		&.secondary {
 			@apply bg-gray-200 hover:bg-gray-300;

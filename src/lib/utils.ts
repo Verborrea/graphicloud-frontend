@@ -35,56 +35,6 @@ export function convexHull(points: Result[]) {
 	return lower.concat(upper);
 }
 
-// export function myWordle(measuredKeywords: CloudWord[]) {
-// 	const placedRects: any[] = [];
-// 	const results: any[] = [];
-
-// 	const sorted = [...measuredKeywords].sort((a, b) => b.score - a.score);
-
-// 	for (const kw of sorted) {
-// 		const w = kw.realW;
-// 		const h = kw.realH * 0.7;
-
-// 		let t = 0;
-// 		const step = 0.5;
-// 		let placed = false;
-
-// 		while (!placed && t < 200) {
-// 			const tx = Math.sin(t) * t * 1.2;
-// 			const ty = Math.cos(t) * t * 1.2;
-
-// 			const candidate = {
-// 				x: tx - w / 2,
-// 				y: ty - h / 2,
-// 				w: w,
-// 				h: h
-// 			};
-
-// 			const overlap = placedRects.some(r =>
-// 				!(candidate.x > r.x + r.w ||
-// 					candidate.x + candidate.w < r.x ||
-// 					candidate.y > r.y + r.h ||
-// 					candidate.y + candidate.h < r.y)
-// 			);
-
-// 			if (!overlap) {
-// 				placedRects.push(candidate);
-// 				results.push({
-// 					text: kw.word,
-// 					size: kw.size,
-// 					x: tx,
-// 					y: ty,
-// 					width: candidate.w,
-// 					height: candidate.h
-// 				});
-// 				placed = true;
-// 			}
-// 			t += step;
-// 		}
-// 	}
-// 	return results;
-// }
-
 export function myWordle(measuredKeywords: CloudWord[], mode: 'mani' | 'rl' | 'rc') {
 	const placedRects: any[] = [];
 	const results: any[] = [];
@@ -141,7 +91,7 @@ export function myWordle(measuredKeywords: CloudWord[], mode: 'mani' | 'rl' | 'r
 export function getRandomColor() {
 	const h = Math.floor(Math.random() * 360);
 	const s = 100;
-	const l = 30;
+	const l = 40;
 
 	return `hsl(${h}, ${s}%, ${l}%)`;
 }
@@ -174,3 +124,41 @@ export function getProgress(val: number, min: number, max: number) {
 	const clamped = Math.min(Math.max(val, min), max);
 	return ((clamped - min) / (max - min)) * 100;
 };
+
+const WORD_CLOUD_PALETTE = [
+	'#E63946',
+	'#2196F3',
+	'#FF6B35',
+	'#7B2D8B',
+	'#00897B',
+	'#F4C430',
+	'#E91E8C',
+	'#1B5E20',
+	'#0077B6',
+	'#BF360C',
+	'#4527A0',
+	'#00838F',
+];
+
+let paletteIndex = 0;
+
+export function getNextCloudColor(): string {
+	const color = WORD_CLOUD_PALETTE[paletteIndex % WORD_CLOUD_PALETTE.length];
+	paletteIndex++;
+	return color;
+}
+
+export function pointInPolygon(
+	point: { x: number; y: number },
+	polygon: { x: number; y: number }[]
+): boolean {
+	let inside = false;
+	const { x, y } = point;
+	for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+		const xi = polygon[i].x, yi = polygon[i].y;
+		const xj = polygon[j].x, yj = polygon[j].y;
+		const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+		if (intersect) inside = !inside;
+	}
+	return inside;
+}

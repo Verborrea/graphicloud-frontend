@@ -2,7 +2,7 @@
 	import * as d3 from 'd3';
 
 	import type { KeyWord, Word, CloudWord } from '$lib/types';
-	import { getRandomColor, myWordle } from '$lib/utils';
+	import { getNextCloudColor, getRandomColor, myWordle } from '$lib/utils';
 	import { cloudState } from '$lib/state.svelte';
 
 	let { keywords = [] } = $props();
@@ -15,7 +15,8 @@
 	let scores = $derived(topNKeywords.map((k) => k.score));
 	let minScore = $derived(d3.min(scores) ?? 0);
 	let maxScore = $derived(d3.max(scores) ?? 1);
-	const color = getRandomColor();
+	// const color = getRandomColor();
+	const color = getNextCloudColor();
 
 	$effect(() => {
 		if (topNKeywords.length === 0 || !measureGrp) return;
@@ -62,7 +63,7 @@
 				/>
 			{/if}
 			<text
-				style="font-size: {word.size}px; font-family: {cloudState.font}; paint-order: stroke;"
+				style="font-size: {word.size}px; font-family: {cloudState.font}; paint-order: stroke; fill: {color};"
 				text-anchor="middle"
 				dominant-baseline="central"
 				class="fill-slate-700 font-extrabold select-none"
