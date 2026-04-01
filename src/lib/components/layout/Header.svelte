@@ -9,6 +9,10 @@
 		offset.y = 0;
 		scale = 1;
 	}
+
+	function handleLassoClick() {
+		selectState.active = true;
+	}
 </script>
 
 <header class="grid grid-cols-[320px_1fr] border-b border-border bg-gray-50 text-sm">
@@ -33,14 +37,8 @@
 			class="btn-icon p-2"
 			class:primary={selectState.active}
 			class:secondary={!selectState.active}
-			title="Modo selección lazo"
-			onclick={() => {
-				selectState.active = !selectState.active;
-				if (!selectState.active) {
-					selectState.words = [];
-					selectState.lassoPoints = [];
-				}
-			}}
+			title={selectState.active ? 'Dibujando lazo…' : 'Modo selección lazo'}
+			onclick={handleLassoClick}
 		>
 			<SquareDashedMousePointer size={16} />
 		</button>

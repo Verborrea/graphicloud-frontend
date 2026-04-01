@@ -4,7 +4,7 @@
 	import NewWordCloud from '../NewWordCloud.svelte';
 	import * as d3 from 'd3';
 
-	let { onHover, onMove, onLeave } = $props();
+	let { onHover, onMove, onLeave, svgEl = $bindable<SVGSVGElement | null>(null) } = $props();
 
 	const locals = $derived(cloudState.results?.locals ?? []);
 	const globals = $derived(cloudState.results?.global ?? []);
@@ -23,6 +23,7 @@
 </script>
 
 <svg
+	bind:this={svgEl}
 	viewBox="0 0 {cloudState.range} {cloudState.range}"
 	class="pointer-events-auto h-200 w-200 overflow-visible"
 >
