@@ -3,12 +3,10 @@ import type { CloudWord, Result } from "./types";
 export function convexHull(points: Result[]) {
 	if (points.length <= 1) return points;
 
-	// Ordenar por X, y en empate por Y
 	const pts = [...points].sort((a, b) =>
 		a.x === b.x ? a.y - b.y : a.x - b.x
 	);
 
-	// Producto cruzado
 	function cross(o: Result, a: Result, b: Result) {
 		return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 	}

@@ -16,7 +16,7 @@
 
 @layer base {
 	:root {
-		@apply bg-gray-100 text-gray-900;
+		@apply bg-slate-100 text-slate-900;
 		font-optical-sizing: auto;
 		overflow: hidden;
 	}
@@ -41,16 +41,16 @@
 			@apply size-4 stroke-[2.5];
 		}
 		&.secondary {
-			@apply bg-gray-200 hover:bg-gray-300;
+			@apply bg-slate-200 hover:bg-slate-300;
 		}
 		&.destructive {
-			@apply bg-rose-500 text-gray-50 hover:bg-rose-600;
+			@apply bg-rose-500 text-slate-50 hover:bg-rose-600;
 		}
 		&.primary {
-			@apply bg-primary text-gray-50 hover:bg-[#1c6be0];
+			@apply bg-primary text-slate-50 hover:bg-[#1c6be0];
 		}
 		&.ghost {
-			@apply hover:bg-gray-200;
+			@apply hover:bg-slate-200;
 		}
 	}
 	.btn-icon {
@@ -59,13 +59,13 @@
 			@apply size-4 stroke-[2.5];
 		}
 		&.primary {
-			@apply bg-primary text-gray-50 hover:bg-[#1c6be0];
+			@apply bg-primary text-slate-50 hover:bg-[#1c6be0];
 		}
 		&.secondary {
-			@apply bg-gray-200 hover:bg-gray-300;
+			@apply bg-slate-200 hover:bg-slate-300;
 		}
 		&.ghost {
-			@apply hover:bg-gray-200;
+			@apply hover:bg-slate-200;
 		}
 	}
 	.range-input {
@@ -79,29 +79,4 @@
 	input[type='range']::-webkit-slider-thumb {
 		@apply size-5 appearance-none rounded-full border-2 border-primary bg-white shadow-md transition-transform active:scale-110;
 	}
-
-	/* .btn {
-		@apply cursor-pointer rounded-lg px-5 py-2 font-semibold transition-all active:scale-98;
-		&.btn-primary {
-			@apply bg-blue-600 text-white shadow-lg hover:bg-blue-700 disabled:bg-blue-200;
-		}
-		&.btn-secondary {
-			@apply bg-gray-200 text-gray-700 hover:bg-gray-300;
-		}
-		&:disabled {
-			@apply cursor-not-allowed shadow-none;
-		}
-	}
-	.error {
-		@apply mb-6 rounded-lg border border-red-200 bg-red-100 p-3 text-sm font-medium text-red-700;
-	}
-	.tooltip {
-		@apply pointer-events-none fixed z-50 flex max-w-64 flex-col gap-1 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-bold text-white shadow-xl transition-transform;
-	}
-	.layer-btn {
-		@apply flex items-center gap-2 rounded-md px-2 py-1 text-[11px] font-medium text-gray-500 transition-all hover:bg-gray-100;
-	}
-	.layer-btn.active {
-		@apply bg-blue-50 text-blue-600;
-	} */
 }

@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
 	import Documents from '../blocks/Documents.svelte';
 	import Mode from '../blocks/Mode.svelte';
 	import Layers from '../blocks/Layers.svelte';
@@ -11,11 +9,11 @@
 	let { isSidebarOpen } = $props();
 </script>
 
-{#if isSidebarOpen}
-	<aside
-		transition:fly={{ duration: 600, x: -320, opacity: 0, easing: quintOut }}
-		class="fixed top-18.75 left-0 z-1 h-[calc(100%-75px)] w-[320px] overflow-y-scroll border-r border-border bg-gray-50 text-sm font-medium"
-	>
+<aside
+	class="h-full shrink-0 overflow-hidden border-r border-border bg-gray-50 text-sm font-medium transition-[width] duration-500 ease-in-out"
+	style="width: {isSidebarOpen ? '320px' : '0px'}"
+>
+	<div class="w-[320px]">
 		<Documents />
 		{#if cloudState.files.length > 0}
 			<Mode />
@@ -23,5 +21,5 @@
 			<Settings />
 			<Preferences />
 		{/if}
-	</aside>
-{/if}
+	</div>
+</aside>

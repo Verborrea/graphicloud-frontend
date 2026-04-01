@@ -49,6 +49,7 @@ export interface Rect {
 export interface Word {
 	text: string;
 	size: number;
+	score: number;
 	x: number;
 	y: number;
 	width: number;
