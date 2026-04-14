@@ -1,5 +1,5 @@
 <script>
-	import { selectState } from '$lib/state.svelte';
+	import { lassoState } from '$lib/state.svelte';
 	import { Cloud, Minus, PanelLeft, Plus, SquareDashedMousePointer } from '@lucide/svelte';
 
 	let { offset, scale = $bindable(), isSidebarOpen = $bindable() } = $props();
@@ -11,7 +11,7 @@
 	}
 
 	function handleLassoClick() {
-		selectState.active = true;
+		lassoState.active = true;
 	}
 </script>
 
@@ -35,9 +35,9 @@
 		<button
 			type="button"
 			class="btn-icon p-2"
-			class:primary={selectState.active}
-			class:secondary={!selectState.active}
-			title={selectState.active ? 'Dibujando lazo…' : 'Modo selección lazo'}
+			class:primary={lassoState.active}
+			class:secondary={!lassoState.active}
+			title={lassoState.active ? 'Dibujando lazo…' : 'Modo selección lazo'}
 			onclick={handleLassoClick}
 		>
 			<SquareDashedMousePointer size={16} />

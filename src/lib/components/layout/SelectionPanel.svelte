@@ -1,23 +1,23 @@
 <script lang="ts">
 	import toast from 'svelte-hot-french-toast';
-	import { selectState } from '$lib/state.svelte';
+	import { lassoState } from '$lib/state.svelte';
 	import { X } from '@lucide/svelte';
 
 	async function generateImage() {
-		if (selectState.isLoadingImage) return;
+		if (lassoState.isLoadingImage) return;
 
-		selectState.isLoadingImage = true;
+		lassoState.isLoadingImage = true;
 		try {
 			const res = await fetch('http://localhost:8000/select-icon', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ keywords: selectState.words })
+				body: JSON.stringify({ keywords: lassoState.words })
 			});
 
 			if (!res.ok) throw new Error('Failed to fetch icon');
 
 			const { svg } = await res.json();
-			selectState.svgOverlay = svg;
+			lassoState.svg = svg;
 			console.log(svg);
 
 			clearSelection();
@@ -25,17 +25,17 @@
 			toast.error(err.message);
 			console.error('Error generating icon:', err);
 		} finally {
-			selectState.isLoadingImage = false;
+			lassoState.isLoadingImage = false;
 		}
 	}
 
 	function clearSelection() {
-		selectState.words = [];
-		selectState.lassoPoints = [];
+		lassoState.words = [];
+		lassoState.lassoPoints = [];
 	}
 
-	const count = $derived(selectState.words.length);
-	const preview = $derived(selectState.words.map((w) => w.word).join(', '));
+	const count = $derived(lassoState.words.length);
+	const preview = $derived(lassoState.words.map((w) => w.word).join(', '));
 </script>
 
 <div class="fixed bottom-8 left-1/2 z-50 -translate-x-1/2">
@@ -55,10 +55,10 @@
 			<div class="flex items-center gap-2">
 				<button
 					onclick={generateImage}
-					disabled={selectState.isLoadingImage}
+					disabled={lassoState.isLoadingImage}
 					class="btn primary h-9 rounded-md px-3 text-sm font-medium"
 				>
-					{selectState.isLoadingImage ? 'Generating...' : 'Generate image'}
+					{lassoState.isLoadingImage ? 'Generating...' : 'Generate image'}
 				</button>
 			</div>
 			<button

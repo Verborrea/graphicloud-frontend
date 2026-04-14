@@ -10,7 +10,9 @@
 </script>
 
 <aside
-	class="h-full shrink-0 overflow-hidden border-r border-border bg-gray-50 text-sm font-medium transition-[width] duration-500 ease-in-out"
+	class="h-full shrink-0 overflow-hidden border-border text-sm font-medium transition-[width] duration-500 ease-in-out {isSidebarOpen
+		? 'border-r'
+		: 'border-none'}"
 	style="width: {isSidebarOpen ? '320px' : '0px'}"
 >
 	<div class="w-[320px]">

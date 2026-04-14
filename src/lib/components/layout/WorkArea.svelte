@@ -1,15 +1,59 @@
 <script lang="ts">
+	import Clouds from '../Clouds.svelte';
+
 	let { offset = $bindable(), scale = $bindable() } = $props();
+
+	let container = $state<HTMLDivElement>();
+	let isPanning = $state(false);
+	let startX = $state(0);
+	let startY = $state(0);
+
+	function onMouseDown(e: MouseEvent) {
+		if (e.button !== 0) return;
+		isPanning = true;
+		startX = e.clientX - offset.x;
+		startY = e.clientY - offset.y;
+	}
+
+	function onMouseMove(e: MouseEvent) {
+		if (!isPanning) return;
+		offset = { x: e.clientX - startX, y: e.clientY - startY };
+	}
+
+	function onMouseUp() {
+		isPanning = false;
+	}
+
+	function onWheel(e: WheelEvent) {
+		e.preventDefault();
+		if (!container) return;
+		const rect = container.getBoundingClientRect();
+		const cx = e.clientX - rect.left;
+		const cy = e.clientY - rect.top;
+		const factor = e.deltaY > 0 ? 0.9 : 1.1;
+		const newScale = Math.min(Math.max(scale * factor, 0.05), 20);
+		offset = {
+			x: cx - (cx - offset.x) * (newScale / scale),
+			y: cy - (cy - offset.y) * (newScale / scale)
+		};
+		scale = newScale;
+	}
 </script>
 
-<div class="h-full flex-1 bg-linear-to-l from-black to-white transition-all">
-	{offset}
-	<br />
-	{scale}
-	<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-		><path
-			fill="currentColor"
-			d="m12 8l-1.33.09C9.81 7.07 7.4 4.5 5 4.5c0 0-1.97 2.96-.04 6.91c-.55.83-.89 1.26-.96 2.25l-1.93.29l.21.98l1.76-.26l.14.71l-1.57.94l.47.89l1.45-.89C5.68 18.76 8.59 20 12 20s6.32-1.24 7.47-3.68l1.45.89l.47-.89l-1.57-.94l.14-.71l1.76.26l.21-.98l-1.93-.29c-.07-.99-.41-1.42-.96-2.25C20.97 7.46 19 4.5 19 4.5c-2.4 0-4.81 2.57-5.67 3.59zm-3 3a1 1 0 0 1 1 1a1 1 0 0 1-1 1a1 1 0 0 1-1-1a1 1 0 0 1 1-1m6 0a1 1 0 0 1 1 1a1 1 0 0 1-1 1a1 1 0 0 1-1-1a1 1 0 0 1 1-1m-4 3h2l-.7 1.39c.2.64.76 1.11 1.45 1.11a1.5 1.5 0 0 0 1.5-1.5h.5a2 2 0 0 1-2 2c-.75 0-1.4-.41-1.75-1c-.35.59-1 1-1.75 1a2 2 0 0 1-2-2h.5a1.5 1.5 0 0 0 1.5 1.5c.69 0 1.25-.47 1.45-1.11z"
-		/></svg
-	>
+<svelte:window onmousemove={onMouseMove} onmouseup={onMouseUp} />
+
+<div
+	bind:this={container}
+	class="relative h-full flex-1 cursor-grab overflow-hidden bg-white"
+	class:cursor-grabbing={isPanning}
+	onmousedown={onMouseDown}
+	onwheel={onWheel}
+	role="presentation"
+	aria-label="Canvas"
+>
+	<svg class="absolute inset-0 size-full">
+		<g transform="translate({offset.x},{offset.y}) scale({scale})">
+			<Clouds />
+		</g>
+	</svg>
 </div>

@@ -7,7 +7,7 @@
 	import Header from '$lib/components/layout/Header.svelte';
 	import SelectionPanel from '$lib/components/layout/SelectionPanel.svelte';
 
-	let isSidebarOpen = $state(true);
+	let isSidebarOpen = $state(false);
 
 	let offset = $state({ x: 0, y: 0 });
 	let scale = $state(1);
