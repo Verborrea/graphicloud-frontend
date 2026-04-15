@@ -1,4 +1,4 @@
-import type { CloudWord, Result } from "./types";
+import type { Result } from "./types";
 
 export function convexHull(points: Result[]) {
 	if (points.length <= 1) return points;
@@ -33,20 +33,30 @@ export function convexHull(points: Result[]) {
 	return lower.concat(upper);
 }
 
-export function myWordle(measuredKeywords: CloudWord[], mode: 'mani' | 'rl' | 'rc') {
+export function myWordle(
+	measuredNodes: {
+		text: string;
+		fontSize: number;
+		width: number;
+		ascent: number;
+		descent: number;
+		score: number
+	}[],
+	mode: 'mani' | 'rl' | 'rc'
+) {
 	const placedRects: any[] = [];
 	const results: any[] = [];
-	const sorted = [...measuredKeywords].sort((a, b) => b.score - a.score);
+	const sorted = [...measuredNodes].sort((a, b) => b.score - a.score);
 
-	for (const kw of sorted) {
-		const w = kw.realW;
-		const h = kw.realH * 0.7;
+	for (const node of sorted) {
+		const w = node.width;
+		const h = node.ascent + node.descent;
 
 		let placed = false;
 		let t = 0;
 		const step = 0.5;
 
-		while (!placed && t < 300) {
+		while (!placed && t < 400) {
 			let tx = 0;
 			let ty = 0;
 
@@ -61,7 +71,12 @@ export function myWordle(measuredKeywords: CloudWord[], mode: 'mani' | 'rl' | 'r
 				ty = Math.pow(t, 1.1) * Math.sin(t) * 1.5;
 			}
 
-			const candidate = { x: tx - w / 2, y: ty - h / 2, w, h };
+			const candidate = {
+				x: tx - w / 2,
+				y: ty - node.ascent,
+				w: w,
+				h: h
+			};
 
 			const overlap = placedRects.some(r =>
 				!(candidate.x > r.x + r.w || candidate.x + candidate.w < r.x ||
@@ -71,12 +86,11 @@ export function myWordle(measuredKeywords: CloudWord[], mode: 'mani' | 'rl' | 'r
 			if (!overlap) {
 				placedRects.push(candidate);
 				results.push({
-					text: kw.word,
-					size: kw.size,
+					...node,
 					x: tx,
 					y: ty,
-					width: candidate.w,
-					height: candidate.h
+					rectX: candidate.x,
+					rectY: candidate.y
 				});
 				placed = true;
 			}
@@ -84,14 +98,6 @@ export function myWordle(measuredKeywords: CloudWord[], mode: 'mani' | 'rl' | 'r
 		}
 	}
 	return results;
-}
-
-export function getRandomColor() {
-	const h = Math.floor(Math.random() * 360);
-	const s = 100;
-	const l = 40;
-
-	return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
 export function handleNumericInput(e: Event, callback: (val: number) => void) {

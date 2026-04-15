@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { limits } from '$lib/const';
 	import Clouds from '../Clouds.svelte';
 
 	let { offset = $bindable(), scale = $bindable() } = $props();
@@ -31,7 +32,7 @@
 		const cx = e.clientX - rect.left;
 		const cy = e.clientY - rect.top;
 		const factor = e.deltaY > 0 ? 0.9 : 1.1;
-		const newScale = Math.min(Math.max(scale * factor, 0.05), 20);
+		const newScale = Math.min(Math.max(scale * factor, limits.zoom.min), limits.zoom.max);
 		offset = {
 			x: cx - (cx - offset.x) * (newScale / scale),
 			y: cy - (cy - offset.y) * (newScale / scale)

@@ -4,25 +4,25 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import { fonts, limits } from '$lib/const';
 	import { getProgress, handleNumericInput } from '$lib/utils';
-	import { cloudState } from '$lib/state.svelte';
+	import { configState } from '$lib/state.svelte';
 
 	let errors = $derived({
-		fontRange: cloudState.minFontSize >= cloudState.maxFontSize,
-		fontMin: cloudState.minFontSize < limits.font.min,
-		fontMax: cloudState.maxFontSize > limits.font.max
+		fontRange: configState.minFontSize >= configState.maxFontSize,
+		fontMin: configState.minFontSize < limits.font.min,
+		fontMax: configState.maxFontSize > limits.font.max
 	});
 </script>
 
 <Block title="PREFERENCES">
 	<div class="flex flex-col gap-3 px-2">
-		<Select name="font" label="Font Family" bind:value={cloudState.font} options={fonts} />
+		<Select name="font" label="Font Family" bind:value={configState.font} options={fonts} />
 		<div class="flex flex-col gap-1">
 			<p class="text-sm font-bold">Font Size</p>
 			<div class="flex items-center gap-3">
 				<input
 					type="text"
-					value={cloudState.minFontSize}
-					oninput={(e) => handleNumericInput(e, (v) => (cloudState.minFontSize = v))}
+					value={configState.minFontSize}
+					oninput={(e) => handleNumericInput(e, (v) => (configState.minFontSize = v))}
 					class="input"
 					class:error={errors.fontMin || errors.fontRange}
 				/>
@@ -31,31 +31,31 @@
 					<div class="absolute h-1.5 w-full rounded-lg bg-gray-200"></div>
 					<div
 						class="absolute h-1.5 rounded-lg bg-primary"
-						style:left="{getProgress(cloudState.minFontSize, limits.font.min, limits.font.max)}%"
+						style:left="{getProgress(configState.minFontSize, limits.font.min, limits.font.max)}%"
 						style:right="{100 -
-							getProgress(cloudState.maxFontSize, limits.font.min, limits.font.max)}%"
+							getProgress(configState.maxFontSize, limits.font.min, limits.font.max)}%"
 					></div>
 
 					<input
 						type="range"
 						min={limits.font.min}
 						max={limits.font.max}
-						bind:value={cloudState.minFontSize}
+						bind:value={configState.minFontSize}
 						class="range-input"
 					/>
 					<input
 						type="range"
 						min={limits.font.min}
 						max={limits.font.max}
-						bind:value={cloudState.maxFontSize}
+						bind:value={configState.maxFontSize}
 						class="range-input"
 					/>
 				</div>
 
 				<input
 					type="text"
-					value={cloudState.maxFontSize}
-					oninput={(e) => handleNumericInput(e, (v) => (cloudState.maxFontSize = v))}
+					value={configState.maxFontSize}
+					oninput={(e) => handleNumericInput(e, (v) => (configState.maxFontSize = v))}
 					class="input"
 					class:error={errors.fontMax || errors.fontRange}
 				/>
@@ -73,27 +73,27 @@
 			<button
 				type="button"
 				class="btn"
-				class:primary={cloudState.theme === 0}
-				class:secondary={cloudState.theme !== 0}
-				onclick={() => (cloudState.theme = 0)}
+				class:primary={configState.theme === 0}
+				class:secondary={configState.theme !== 0}
+				onclick={() => (configState.theme = 0)}
 			>
 				<Monitor />
 			</button>
 			<button
 				type="button"
 				class="btn"
-				class:primary={cloudState.theme === 1}
-				class:secondary={cloudState.theme !== 1}
-				onclick={() => (cloudState.theme = 1)}
+				class:primary={configState.theme === 1}
+				class:secondary={configState.theme !== 1}
+				onclick={() => (configState.theme = 1)}
 			>
 				<Sun />
 			</button>
 			<button
 				type="button"
 				class="btn"
-				class:primary={cloudState.theme === 2}
-				class:secondary={cloudState.theme !== 2}
-				onclick={() => (cloudState.theme = 2)}
+				class:primary={configState.theme === 2}
+				class:secondary={configState.theme !== 2}
+				onclick={() => (configState.theme = 2)}
 			>
 				<Moon />
 			</button>

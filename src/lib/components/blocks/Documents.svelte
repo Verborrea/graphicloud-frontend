@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Block from '$lib/components/blocks/Block.svelte';
 	import ErrorMessage from '$lib/components/ui/ErrorMessage.svelte';
-	import { cloudState } from '$lib/state.svelte';
+	import { configState } from '$lib/state.svelte';
 	import { FileUp, FileText, Trash2, ExternalLink } from '@lucide/svelte';
 
 	let isDragging = $state(false);
@@ -11,14 +11,14 @@
 		errorMessage = '';
 		const pdfs = Array.from(newFiles).filter((file) => {
 			if (file.type !== 'application/pdf') {
-				errorMessage = 'Only PDF files are allowed.';
+				errorMessage = 'Only PDFs are allowed.';
 				return false;
 			}
 			return true;
 		});
 
-		cloudState.files = [...cloudState.files, ...pdfs];
-		if (errorMessage) setTimeout(() => (errorMessage = ''), 3000);
+		configState.files = [...configState.files, ...pdfs];
+		if (errorMessage) setTimeout(() => (errorMessage = ''), 5000);
 	};
 
 	const openFile = (file: File) => {
@@ -42,18 +42,18 @@
 	};
 
 	$effect(() => {
-		const files = cloudState.files;
+		const files = configState.files;
 
 		// Solo disparamos si hay archivos (mínimo 1 para el mock, 3 para el real)
 		if (files.length > 0) {
 			fetchBackend(files);
 		} else {
-			cloudState.results = null;
+			configState.results = null;
 		}
 	});
 
 	async function fetchBackend(files: File[]) {
-		cloudState.isLoading = true;
+		configState.isLoading = true;
 
 		const formData = new FormData();
 		files.forEach((file) => formData.append('files', file));
@@ -67,16 +67,16 @@
 			if (!response.ok) throw new Error('Error en el servidor');
 
 			const data = await response.json();
-			cloudState.results = data;
+			configState.results = data;
 		} catch (error) {
 			console.error('Error fetching mock:', error);
 		} finally {
-			cloudState.isLoading = false;
+			configState.isLoading = false;
 		}
 	}
 </script>
 
-{#if cloudState.files.length === 0}
+{#if configState.files.length === 0}
 	<section class="flex h-full flex-col gap-4 p-6">
 		<h2 class="text-xs leading-5.5 font-bold tracking-wide text-gray-400 uppercase">DOCUMENTS</h2>
 		<div
@@ -107,7 +107,7 @@
 {:else}
 	<Block title="DOCUMENTS">
 		<div class="flex flex-col">
-			{#each cloudState.files as file, i (file.name + i)}
+			{#each configState.files as file, i (file.name + i)}
 				<div class="group flex items-center justify-between rounded-lg p-2 hover:bg-gray-100">
 					<div class="flex flex-1 items-center gap-2 overflow-hidden">
 						<FileText size={16} class="shrink-0 text-gray-400 group-hover:text-gray-900" />
@@ -123,7 +123,7 @@
 							<ExternalLink size={16} strokeWidth={2.5} />
 						</button>
 						<button
-							onclick={() => (cloudState.files = cloudState.files.filter((_, idx) => idx !== i))}
+							onclick={() => (configState.files = configState.files.filter((_, idx) => idx !== i))}
 							class="-my-1 p-1.5 text-gray-400 opacity-0 transition-all group-hover:opacity-100 hover:text-rose-500"
 							title="Eliminar"
 						>
@@ -135,7 +135,7 @@
 		</div>
 
 		<div class="mt-2 grid grid-cols-2 gap-2">
-			<button type="button" onclick={() => (cloudState.files = [])} class="btn destructive">
+			<button type="button" onclick={() => (configState.files = [])} class="btn destructive">
 				Clear all
 			</button>
 

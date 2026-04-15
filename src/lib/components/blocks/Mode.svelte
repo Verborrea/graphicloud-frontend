@@ -1,6 +1,6 @@
 <script>
 	import Block from '$lib/components/blocks/Block.svelte';
-	import { cloudState } from '$lib/state.svelte';
+	import { configState } from '$lib/state.svelte';
 </script>
 
 <Block title="MODE">
@@ -8,18 +8,18 @@
 		<button
 			type="button"
 			class="btn"
-			class:primary={cloudState.global === false}
-			class:secondary={cloudState.global !== false}
-			onclick={() => (cloudState.global = false)}
+			class:primary={configState.global === false}
+			class:secondary={configState.global !== false}
+			onclick={() => (configState.global = false)}
 		>
 			Local
 		</button>
 		<button
 			type="button"
 			class="btn"
-			class:primary={cloudState.global === true}
-			class:secondary={cloudState.global !== true}
-			onclick={() => (cloudState.global = true)}
+			class:primary={configState.global === true}
+			class:secondary={configState.global !== true}
+			onclick={() => (configState.global = true)}
 		>
 			Global
 		</button>

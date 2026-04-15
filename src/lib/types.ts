@@ -1,4 +1,4 @@
-export interface CloudStateType {
+export interface ConfigStateType {
 	files: File[];
 	results: { global: any[], locals: any[] } | null;
 	isLoading: boolean;
@@ -16,6 +16,11 @@ export interface CloudStateType {
 	maxFontSize: number;
 	range: number;
 	theme: number;
+}
+
+export interface CloudStateType {
+	global: any;
+	locals: any[];
 }
 
 export interface LassoStateType {
@@ -37,15 +42,25 @@ export interface WordNode {
 	width: number;
 	height: number;
 	ascent: number;
+	descent: number;
 };
+
+export interface KeyWord {
+	word: string
+	score: number
+}
+
+export interface Result {
+	filename: string
+	x: number
+	y: number
+	keywords: KeyWord[]
+}
 
 
 // Old stuff
 
-// export interface KeyWord {
-// 	word: string
-// 	score: number
-// }
+
 
 // export interface CloudWord extends KeyWord {
 // 	size: number
@@ -53,12 +68,7 @@ export interface WordNode {
 // 	realH: number
 // }
 
-// export interface Result {
-// 	filename: string
-// 	x: number
-// 	y: number
-// 	keywords: KeyWord[]
-// }
+
 
 // export interface Rect {
 // 	x: number;
