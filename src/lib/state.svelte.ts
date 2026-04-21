@@ -32,5 +32,4 @@ export const lassoState = $state<LassoStateType>({
 	words: [] as { word: string; score: number; cloudId: string }[],
 	svg: null as string | null,
 	isLoadingImage: false,
-	placedWordsMap: {} as Record<string, { text: string; score: number; x: number; y: number }[]>,
 })

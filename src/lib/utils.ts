@@ -54,7 +54,7 @@ export function myWordle(
 
 		let placed = false;
 		let t = 0;
-		const step = 0.5;
+		const step = 0.1;
 
 		while (!placed && t < 400) {
 			let tx = 0;
@@ -129,7 +129,7 @@ export function getProgress(val: number, min: number, max: number) {
 	return ((clamped - min) / (max - min)) * 100;
 };
 
-const WORD_CLOUD_PALETTE = [
+export const WORD_CLOUD_PALETTE = [
 	'#E63946',
 	'#2196F3',
 	'#FF6B35',

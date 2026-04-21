@@ -11,7 +11,11 @@
 	}
 
 	function handleLassoClick() {
-		lassoState.active = true;
+		lassoState.active = !lassoState.active;
+		if (!lassoState.active) {
+			lassoState.lassoPoints = [];
+			lassoState.isDrawing = false;
+		}
 	}
 </script>
 
@@ -43,12 +47,6 @@
 			<SquareDashedMousePointer size={16} />
 		</button>
 		<div class="flex items-center gap-6 font-mono font-medium">
-			<button
-				type="button"
-				onclick={reset}
-				class="btn-icon secondary px-5 py-1.5 leading-none"
-				aria-label="Reset zoom">Reset View</button
-			>
 			<span>x: {Math.round(offset.x)}</span>
 			<span>y: {Math.round(offset.y)}</span>
 			<div class="flex items-center gap-2">
@@ -66,6 +64,12 @@
 					aria-label="More zoom"><Plus /></button
 				>
 			</div>
+			<button
+				type="button"
+				onclick={reset}
+				class="btn-icon secondary px-5 py-1.5 leading-none"
+				aria-label="Reset zoom">Reset View</button
+			>
 		</div>
 	</section>
 </header>

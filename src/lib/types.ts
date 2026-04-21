@@ -30,7 +30,6 @@ export interface LassoStateType {
 	words: { word: string; score: number; cloudId: string }[],
 	svg: string | null,
 	isLoadingImage: boolean,
-	placedWordsMap: Record<string, { text: string; score: number; x: number; y: number }[]>,
 }
 
 export interface WordNode {

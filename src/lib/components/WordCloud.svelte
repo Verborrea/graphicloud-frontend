@@ -3,9 +3,12 @@
 
 	let { cloudId, isGlobal = false } = $props();
 
-	const nodes = $derived(
-		isGlobal ? cloudState.global : (cloudState.locals.find((l) => l.id === cloudId)?.nodes ?? [])
+	const cloudData = $derived(
+		isGlobal ? cloudState.global : cloudState.locals.find((l) => l.id === cloudId)
 	);
+
+	const nodes = $derived(cloudData?.nodes ?? []);
+	const cloudColor = $derived(cloudData?.color ?? '#111');
 </script>
 
 <g class="word-cloud">
@@ -17,7 +20,7 @@
 				width={node.width}
 				height={node.ascent + node.descent}
 				fill="none"
-				stroke="#3b82f6"
+				stroke={cloudColor}
 				stroke-width="0.5"
 			/>
 		{/if}
@@ -29,7 +32,7 @@
 				font-size={node.fontSize}
 				font-family={configState.font}
 				text-anchor="middle"
-				fill="#111"
+				fill={cloudColor}
 				class="transition-opacity select-none"
 			>
 				{node.text}
