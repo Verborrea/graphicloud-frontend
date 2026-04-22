@@ -26,17 +26,29 @@
 		{/if}
 
 		{#if configState.layers.wc}
-			<text
-				x={node.x}
-				y={node.y}
-				font-size={node.fontSize}
-				font-family={configState.font}
-				text-anchor="middle"
-				fill={cloudColor}
-				class="transition-opacity select-none"
-			>
-				{node.text}
-			</text>
+			{#if node.svg}
+				<image
+					href="data:image/svg+xml,{encodeURIComponent(
+						(node.svg as string).replace('currentColor', cloudColor)
+					)}"
+					x={node.x - node.fontSize / 2}
+					y={node.y - node.fontSize}
+					width={node.fontSize}
+					height={node.fontSize}
+				/>
+			{:else}
+				<text
+					x={node.x}
+					y={node.y}
+					font-size={node.fontSize}
+					font-family={configState.font}
+					text-anchor="middle"
+					fill={cloudColor}
+					class="transition-opacity select-none"
+				>
+					{node.text}
+				</text>
+			{/if}
 		{/if}
 	{/each}
 </g>

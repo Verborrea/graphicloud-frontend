@@ -4,6 +4,7 @@
 	import { measureWord } from '$lib/measureWord';
 	import WordCloud from './WordCloud.svelte';
 	import * as d3 from 'd3';
+	import type { KeyWord, WCNode } from '$lib/types';
 
 	const xScale = $derived(d3.scaleLinear().domain([0, 1]).range([0, configState.range]));
 	const yScale = $derived(d3.scaleLinear().domain([0, 1]).range([configState.range, 0]));
@@ -19,70 +20,187 @@
 			.curve(d3.curveLinearClosed)
 	);
 
+	async function measureAndPlace(
+		words: any[],
+		font: string,
+		minFontSize: number,
+		maxFontSize: number,
+		algorithm: string
+	) {
+		const scores = words.map((w) => w.score);
+		const minS = Math.min(...scores);
+		const maxS = Math.max(...scores);
+
+		const measured = await Promise.all(
+			words.map(async (kw) => {
+				const fontSize =
+					minFontSize + ((kw.score - minS) / (maxS - minS || 1)) * (maxFontSize - minFontSize);
+
+				if (kw.svg) {
+					return { ...kw, fontSize, width: fontSize, ascent: fontSize, descent: 0 };
+				}
+
+				const dims = await measureWord(kw.word, fontSize, font);
+				return { ...kw, ...dims, fontSize, text: kw.word };
+			})
+		);
+
+		return myWordle(measured, algorithm as any);
+	}
+
+	let iconMemory: Record<string, WCNode[]> = {};
+
+	// Efecto principal — solo para configuración
 	$effect(() => {
 		const results = configState.results;
 		if (!results) return;
 
-		async function processAll() {
-			if (!results) return;
+		const algorithm = configState.algorithm;
+		const keywordsCount = configState.keywordsCount;
+		const minFontSize = configState.minFontSize;
+		const maxFontSize = configState.maxFontSize;
+		const font = configState.font;
+		const isGlobal = configState.global;
+		const range = configState.range;
 
-			if (configState.global) {
-				const ox = configState.range / 2;
-				const oy = configState.range / 2;
-				const nodes = await prepareCloud(
-					results.global,
-					'global',
-					configState.range / 2,
-					configState.range / 2
-				);
-				cloudState.global = {
-					nodes,
-					color: WORD_CLOUD_PALETTE[0],
-					ox,
-					oy
-				};
-			} else {
-				const processedLocals = await Promise.all(
-					results.locals.map(async (doc, index) => {
-						const id = doc.filename;
-						const ox = xScale(doc.x);
-						const oy = yScale(doc.y);
-						const nodes = await prepareCloud(doc.keywords, id, xScale(doc.x), yScale(doc.y));
-						const color = WORD_CLOUD_PALETTE[index % WORD_CLOUD_PALETTE.length];
-						return { id, nodes, color, ox, oy };
-					})
-				);
-				cloudState.locals = processedLocals;
-			}
+		iconMemory = {}; // reset memoria cuando cambia config
+
+		processAll(
+			results,
+			{ algorithm, keywordsCount, minFontSize, maxFontSize, font, isGlobal, range },
+			new Map()
+		);
+	});
+
+	// Efecto separado — solo para íconos
+	$effect(() => {
+		const results = configState.results;
+		if (!results) return;
+		const newSvg = lassoState.svg;
+		if (!newSvg) return;
+
+		// Capturar words ANTES de que clearSelection las borre
+		const selectedWords = [...lassoState.words];
+		if (selectedWords.length === 0) return;
+
+		const algorithm = configState.algorithm;
+		const keywordsCount = configState.keywordsCount;
+		const minFontSize = configState.minFontSize;
+		const maxFontSize = configState.maxFontSize;
+		const font = configState.font;
+		const isGlobal = configState.global;
+		const range = configState.range;
+
+		const pendingByCloud = new Map<string, { words: string[]; score: number }>();
+		for (const w of selectedWords) {
+			if (!pendingByCloud.has(w.cloudId)) pendingByCloud.set(w.cloudId, { words: [], score: 0 });
+			const entry = pendingByCloud.get(w.cloudId)!;
+			entry.words.push(w.word);
+			entry.score += w.score;
 		}
 
-		async function prepareCloud(keywords: any[], cloudId: string, ox: number, oy: number) {
-			const words = keywords.slice(0, configState.keywordsCount);
-			if (words.length === 0) return [];
+		processAll(
+			results,
+			{ algorithm, keywordsCount, minFontSize, maxFontSize, font, isGlobal, range },
+			pendingByCloud
+		);
+	});
 
-			const scores = words.map((w) => w.score);
-			const minS = Math.min(...scores);
-			const maxS = Math.max(...scores);
+	async function processAll(
+		results: any,
+		cfg: {
+			algorithm: string;
+			keywordsCount: number;
+			minFontSize: number;
+			maxFontSize: number;
+			font: string;
+			isGlobal: boolean;
+			range: number;
+		},
+		pendingByCloud: Map<string, { words: string[]; score: number }>
+	) {
+		const { algorithm, keywordsCount, minFontSize, maxFontSize, font, isGlobal, range } = cfg;
 
-			const measured = await Promise.all(
-				words.map(async (kw) => {
-					const fontSize =
-						configState.minFontSize +
-						((kw.score - minS) / (maxS - minS || 1)) *
-							(configState.maxFontSize - configState.minFontSize);
-
-					const dims = await measureWord(kw.word, fontSize, configState.font);
-					return { ...kw, ...dims, fontSize, text: kw.word };
+		if (isGlobal) {
+			const nodes = await prepareCloud(
+				results.global,
+				'global',
+				keywordsCount,
+				pendingByCloud,
+				font,
+				minFontSize,
+				maxFontSize,
+				algorithm
+			);
+			iconMemory['global'] = nodes.filter((n: any) => !!n.svg);
+			cloudState.global = {
+				id: 'global',
+				nodes,
+				color: WORD_CLOUD_PALETTE[0],
+				ox: range / 2,
+				oy: range / 2
+			};
+		} else {
+			const processedLocals = await Promise.all(
+				results.locals.map(async (doc: any, index: number) => {
+					const id = doc.filename;
+					const nodes = await prepareCloud(
+						doc.keywords,
+						id,
+						keywordsCount,
+						pendingByCloud,
+						font,
+						minFontSize,
+						maxFontSize,
+						algorithm
+					);
+					iconMemory[id] = nodes.filter((n: any) => !!n.svg);
+					const color = WORD_CLOUD_PALETTE[index % WORD_CLOUD_PALETTE.length];
+					return { id, nodes, color, ox: xScale(doc.x), oy: yScale(doc.y) };
 				})
 			);
+			cloudState.locals = processedLocals;
+		}
+	}
 
-			const positioned = myWordle(measured, configState.algorithm);
+	async function prepareCloud(
+		keywords: KeyWord[],
+		cloudId: string,
+		keywordsCount: number,
+		pendingByCloud: Map<string, { words: string[]; score: number }>,
+		font: string,
+		minFontSize: number,
+		maxFontSize: number,
+		algorithm: string
+	) {
+		const existingIcons: WCNode[] = iconMemory[cloudId] ?? [];
+		const alreadyExcluded = existingIcons.flatMap((n) => n.replacedWords ?? []);
+		const pending = pendingByCloud.get(cloudId);
+		const allExcluded = [...alreadyExcluded, ...(pending?.words ?? [])];
 
-			return positioned;
+		const availableKeywords = keywords.filter((kw) => !allExcluded.includes(kw.word));
+		const iconsCount = existingIcons.length + (pending ? 1 : 0);
+		const keywordSlots = Math.max(0, keywordsCount - iconsCount);
+
+		if (availableKeywords.length > keywordsCount) {
+			iconMemory[cloudId] = [];
+			return await measureAndPlace(
+				keywords.slice(0, keywordsCount),
+				font,
+				minFontSize,
+				maxFontSize,
+				algorithm
+			);
 		}
 
-		processAll();
-	});
+		let words: any[] = availableKeywords.slice(0, keywordSlots);
+		for (const icon of existingIcons) words.push(icon);
+		if (pending)
+			words.push({ score: pending.score, svg: lassoState.svg, replacedWords: pending.words });
+
+		if (words.length === 0) return [];
+		return await measureAndPlace(words, font, minFontSize, maxFontSize, algorithm);
+	}
 </script>
 
 {#if configState.global}

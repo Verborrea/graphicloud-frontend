@@ -18,12 +18,11 @@
 
 			const { svg } = await res.json();
 			lassoState.svg = svg;
-			console.log(svg);
-
 			clearSelection();
+
+			console.log(svg);
 		} catch (err: any) {
 			toast.error(err.message);
-			console.error('Error generating icon:', err);
 		} finally {
 			lassoState.isLoadingImage = false;
 		}

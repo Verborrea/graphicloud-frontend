@@ -4,7 +4,7 @@ export const configState = $state<ConfigStateType>({
 	files: [],
 	results: null,
 	isLoading: false,
-	global: false,
+	global: true,
 	layers: {
 		docs: true,
 		hull: true,

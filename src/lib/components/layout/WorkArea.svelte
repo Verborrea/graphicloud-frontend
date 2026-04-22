@@ -107,6 +107,7 @@
 	bind:this={container}
 	class="relative h-full flex-1 cursor-grab overflow-hidden bg-white"
 	class:cursor-grabbing={isPanning}
+	class:!cursor-crosshair={lassoState.active}
 	onmousedown={onMouseDown}
 	onwheel={onWheel}
 	role="presentation"

@@ -1,6 +1,32 @@
+export interface KeyWord {
+	word: string
+	score: number
+}
+
+export interface WCNode extends KeyWord {
+	width: number;
+	fontSize: number;
+	x: number;
+	y: number;
+	ascent: number;
+	descent: number;
+	text?: string;
+	svg?: string;
+	rectX?: number;
+	rectY?: number;
+	replacedWords?: string[]; // temporal
+}
+
+export interface Result {
+	filename: string
+	x: number
+	y: number
+	keywords: KeyWord[]
+}
+
 export interface ConfigStateType {
 	files: File[];
-	results: { global: any[], locals: any[] } | null;
+	results: { global: KeyWord[], locals: Result[] } | null;
 	isLoading: boolean;
 	global: boolean;
 	layers: {
@@ -18,9 +44,17 @@ export interface ConfigStateType {
 	theme: number;
 }
 
+interface Cloud {
+	id: string;
+	nodes: WCNode[];
+	color: string;
+	ox: number;
+	oy: number;
+}
+
 export interface CloudStateType {
-	global: any;
-	locals: any[];
+	global: Cloud | null;
+	locals: Cloud[];
 }
 
 export interface LassoStateType {
@@ -44,44 +78,3 @@ export interface WordNode {
 	descent: number;
 };
 
-export interface KeyWord {
-	word: string
-	score: number
-}
-
-export interface Result {
-	filename: string
-	x: number
-	y: number
-	keywords: KeyWord[]
-}
-
-
-// Old stuff
-
-
-
-// export interface CloudWord extends KeyWord {
-// 	size: number
-// 	realW: number
-// 	realH: number
-// }
-
-
-
-// export interface Rect {
-// 	x: number;
-// 	y: number;
-// 	w: number;
-// 	h: number;
-// }
-
-// export interface Word {
-// 	text: string;
-// 	size: number;
-// 	score: number;
-// 	x: number;
-// 	y: number;
-// 	width: number;
-// 	height: number;
-// }
