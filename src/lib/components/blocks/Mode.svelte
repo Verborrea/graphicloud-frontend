@@ -1,25 +1,25 @@
 <script>
 	import Block from '$lib/components/blocks/Block.svelte';
-	import { configState } from '$lib/state.svelte';
+	import { mode } from '$lib/state.svelte';
 </script>
 
 <Block title="MODE">
-	<div class="grid grid-cols-2 gap-2 px-2">
+	<div class="grid grid-cols-2 gap-2">
 		<button
 			type="button"
 			class="btn"
-			class:primary={configState.global === false}
-			class:secondary={configState.global !== false}
-			onclick={() => (configState.global = false)}
+			class:primary={mode.mode === 'local'}
+			class:secondary={mode.mode === 'global'}
+			onclick={() => (mode.mode = 'local')}
 		>
 			Local
 		</button>
 		<button
 			type="button"
 			class="btn"
-			class:primary={configState.global === true}
-			class:secondary={configState.global !== true}
-			onclick={() => (configState.global = true)}
+			class:primary={mode.mode === 'global'}
+			class:secondary={mode.mode === 'local'}
+			onclick={() => (mode.mode = 'global')}
 		>
 			Global
 		</button>

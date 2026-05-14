@@ -1,5 +1,5 @@
 <script>
-	import { lassoState } from '$lib/state.svelte';
+	import { lasso } from '$lib/state.svelte';
 	import { Cloud, Minus, PanelLeft, Plus, SquareDashedMousePointer } from '@lucide/svelte';
 
 	let { offset, scale = $bindable(), isSidebarOpen = $bindable() } = $props();
@@ -11,15 +11,15 @@
 	}
 
 	function handleLassoClick() {
-		lassoState.active = !lassoState.active;
-		if (!lassoState.active) {
-			lassoState.lassoPoints = [];
-			lassoState.isDrawing = false;
+		lasso.active = !lasso.active;
+		if (!lasso.active) {
+			lasso.lassoPoints = [];
+			lasso.isDrawing = false;
 		}
 	}
 </script>
 
-<header class="grid grid-cols-[320px_1fr] border-b border-border bg-gray-50 text-sm">
+<header class="grid grid-cols-[320px_1fr] border-b border-border bg-slate-50 text-sm">
 	<section class="flex items-center justify-between gap-2 border-r border-border p-6">
 		<h1 class="flex items-center gap-2">
 			<div class="center size-6 rounded-md bg-primary text-white">
@@ -39,9 +39,9 @@
 		<button
 			type="button"
 			class="btn-icon p-2"
-			class:primary={lassoState.active}
-			class:secondary={!lassoState.active}
-			title={lassoState.active ? 'Dibujando lazo…' : 'Modo selección lazo'}
+			class:primary={lasso.active}
+			class:secondary={!lasso.active}
+			title="Lasso Tool"
 			onclick={handleLassoClick}
 		>
 			<SquareDashedMousePointer size={16} />

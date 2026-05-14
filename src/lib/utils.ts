@@ -33,27 +33,49 @@ export function convexHull(points: Result[]) {
 	return lower.concat(upper);
 }
 
+export type LayoutNode = {
+	id: string;
+
+	texts: string[];
+
+	score: number;
+
+	fontSize: number;
+
+	w: number;
+	h: number;
+
+	icon?: string;
+};
+
+export type PositionedNode = LayoutNode & {
+	x: number;
+	y: number;
+};
+
 export function myWordle(
-	measuredNodes: {
-		text: string;
-		fontSize: number;
-		width: number;
-		ascent: number;
-		descent: number;
-		score: number
-	}[],
+	nodes: LayoutNode[],
 	mode: 'mani' | 'rl' | 'rc'
-) {
-	const placedRects: any[] = [];
-	const results: any[] = [];
-	const sorted = [...measuredNodes].sort((a, b) => b.score - a.score);
+): PositionedNode[] {
+	const placedRects: {
+		x: number;
+		y: number;
+		w: number;
+		h: number;
+	}[] = [];
+
+	const results: PositionedNode[] = [];
+
+	const sorted = [...nodes].sort((a, b) => b.score - a.score);
 
 	for (const node of sorted) {
-		const w = node.width;
-		const h = node.ascent + node.descent;
+		const w = node.w;
+		const h = node.h;
 
 		let placed = false;
+
 		let t = 0;
+
 		const step = 0.1;
 
 		while (!placed && t < 400) {
@@ -61,42 +83,53 @@ export function myWordle(
 			let ty = 0;
 
 			if (mode === 'mani') {
-				tx = (t * 1.2) * Math.cos(t);
-				ty = (t * 1.2) * Math.sin(t);
-			} else if (mode === 'rl') {
-				tx = (t * 2.5) * Math.cos(t);
-				ty = (t * 1.0) * Math.sin(t);
-			} else if (mode === 'rc') {
+				tx = t * 1.2 * Math.cos(t);
+				ty = t * 1.2 * Math.sin(t);
+			}
+
+			else if (mode === 'rl') {
+				tx = t * 2.5 * Math.cos(t);
+				ty = t * 1.0 * Math.sin(t);
+			}
+
+			else if (mode === 'rc') {
 				tx = Math.pow(t, 1.1) * Math.cos(t) * 1.5;
 				ty = Math.pow(t, 1.1) * Math.sin(t) * 1.5;
 			}
 
 			const candidate = {
 				x: tx - w / 2,
-				y: ty - node.ascent,
-				w: w,
-				h: h
+				y: ty - h / 2,
+				w,
+				h
 			};
 
-			const overlap = placedRects.some(r =>
-				!(candidate.x > r.x + r.w || candidate.x + candidate.w < r.x ||
-					candidate.y > r.y + r.h || candidate.y + candidate.h < r.y)
+			const overlap = placedRects.some((r) =>
+				!(
+					candidate.x > r.x + r.w ||
+					candidate.x + candidate.w < r.x ||
+					candidate.y > r.y + r.h ||
+					candidate.y + candidate.h < r.y
+				)
 			);
 
 			if (!overlap) {
 				placedRects.push(candidate);
+
 				results.push({
 					...node,
+
 					x: tx,
-					y: ty,
-					rectX: candidate.x,
-					rectY: candidate.y
+					y: ty
 				});
+
 				placed = true;
 			}
+
 			t += step;
 		}
 	}
+
 	return results;
 }
 

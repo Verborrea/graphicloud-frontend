@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { limits } from '$lib/const';
-	import { cloudState, configState, lassoState } from '$lib/state.svelte';
+	import { api, gclouds, lasso, mode } from '$lib/state.svelte';
 	import { pointInPolygon } from '$lib/utils';
 	import Clouds from '../Clouds.svelte';
 
@@ -27,11 +27,11 @@
 	function onMouseDown(e: MouseEvent) {
 		if (e.button !== 0) return;
 
-		if (lassoState.active) {
-			lassoState.isDrawing = true;
-			lassoState.words = [];
+		if (lasso.active) {
+			lasso.isDrawing = true;
+			lasso.words = [];
 			const pt = toWorld(e.clientX, e.clientY);
-			lassoState.lassoPoints = [pt];
+			lasso.lassoPoints = [pt];
 		} else {
 			isPanning = true;
 			startX = e.clientX - offset.x;
@@ -40,18 +40,18 @@
 	}
 
 	function onMouseMove(e: MouseEvent) {
-		if (lassoState.active && lassoState.isDrawing) {
+		if (lasso.active && lasso.isDrawing) {
 			const pt = toWorld(e.clientX, e.clientY);
-			lassoState.lassoPoints.push(pt);
+			lasso.lassoPoints.push(pt);
 		} else if (isPanning) {
 			offset = { x: e.clientX - startX, y: e.clientY - startY };
 		}
 	}
 
 	function onMouseUp() {
-		if (lassoState.active && lassoState.isDrawing) {
-			lassoState.isDrawing = false;
-			lassoState.words = getWordsInsideLasso();
+		if (lasso.active && lasso.isDrawing) {
+			lasso.isDrawing = false;
+			lasso.words = getWordsInsideLasso();
 		} else {
 			isPanning = false;
 		}
@@ -72,24 +72,25 @@
 		scale = newScale;
 	}
 
+	// revisar para varias palabras
 	function getWordsInsideLasso() {
-		const polygon = lassoState.lassoPoints;
+		const polygon = lasso.lassoPoints;
 		if (polygon.length < 3) return [];
 
 		const selected = [];
 
-		const cloudsToProcess = configState.global ? [cloudState.global] : cloudState.locals;
+		const cloudsToProcess = mode.mode === 'global' ? [gclouds.global] : gclouds.locals;
 
 		for (const cloud of cloudsToProcess) {
 			if (!cloud || !cloud.nodes) continue;
 
 			for (const node of cloud.nodes) {
-				const worldX = cloud.ox + node.x;
-				const worldY = cloud.oy + node.y;
+				const worldX = cloud.offsetX + node.x;
+				const worldY = cloud.offsetY + node.y;
 
 				if (pointInPolygon({ x: worldX, y: worldY }, polygon)) {
 					selected.push({
-						word: node.text,
+						word: node.texts[0],
 						score: node.score,
 						cloudId: cloud.id || 'global'
 					});
@@ -107,7 +108,7 @@
 	bind:this={container}
 	class="relative h-full flex-1 cursor-grab overflow-hidden bg-white"
 	class:cursor-grabbing={isPanning}
-	class:!cursor-crosshair={lassoState.active}
+	class:!cursor-crosshair={lasso.active}
 	onmousedown={onMouseDown}
 	onwheel={onWheel}
 	role="presentation"
@@ -116,9 +117,9 @@
 	<svg class="absolute inset-0 size-full">
 		<g transform="translate({offset.x},{offset.y}) scale({scale})">
 			<Clouds />
-			{#if lassoState.lassoPoints.length > 1}
+			{#if lasso.lassoPoints.length > 1}
 				<polygon
-					points={lassoState.lassoPoints.map((p) => `${p.x},${p.y}`).join(' ')}
+					points={lasso.lassoPoints.map((p) => `${p.x},${p.y}`).join(' ')}
 					class="fill-primary/10 stroke-primary stroke-[2px]"
 					style="stroke-dasharray: 4;"
 					vector-effect="non-scaling-stroke"

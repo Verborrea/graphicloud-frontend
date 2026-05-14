@@ -14,7 +14,7 @@
 				<option value={algo.value}>{algo.text}</option>
 			{/each}
 		</select>
-		<div class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-gray-400">
+		<div class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-slate-400">
 			<ChevronsUpDown size={16} />
 		</div>
 	</div>

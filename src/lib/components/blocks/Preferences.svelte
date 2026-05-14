@@ -4,58 +4,58 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import { fonts, limits } from '$lib/const';
 	import { getProgress, handleNumericInput } from '$lib/utils';
-	import { configState } from '$lib/state.svelte';
+	import { preferences } from '$lib/state.svelte';
 
 	let errors = $derived({
-		fontRange: configState.minFontSize >= configState.maxFontSize,
-		fontMin: configState.minFontSize < limits.font.min,
-		fontMax: configState.maxFontSize > limits.font.max
+		fontRange: preferences.minFontSize >= preferences.maxFontSize,
+		fontMin: preferences.minFontSize < limits.font.min,
+		fontMax: preferences.maxFontSize > limits.font.max
 	});
 </script>
 
 <Block title="PREFERENCES">
-	<div class="flex flex-col gap-3 px-2">
-		<Select name="font" label="Font Family" bind:value={configState.font} options={fonts} />
+	<div class="flex flex-col gap-3">
+		<Select name="font" label="Font Family" bind:value={preferences.font} options={fonts} />
 		<div class="flex flex-col gap-1">
 			<p class="text-sm font-bold">Font Size</p>
 			<div class="flex items-center gap-3">
 				<input
 					type="text"
-					value={configState.minFontSize}
-					oninput={(e) => handleNumericInput(e, (v) => (configState.minFontSize = v))}
+					value={preferences.minFontSize}
+					oninput={(e) => handleNumericInput(e, (v) => (preferences.minFontSize = v))}
 					class="input"
 					class:error={errors.fontMin || errors.fontRange}
 				/>
 
 				<div class="relative flex h-6 flex-1 items-center">
-					<div class="absolute h-1.5 w-full rounded-lg bg-gray-200"></div>
+					<div class="absolute h-1.5 w-full rounded-lg bg-slate-200"></div>
 					<div
 						class="absolute h-1.5 rounded-lg bg-primary"
-						style:left="{getProgress(configState.minFontSize, limits.font.min, limits.font.max)}%"
+						style:left="{getProgress(preferences.minFontSize, limits.font.min, limits.font.max)}%"
 						style:right="{100 -
-							getProgress(configState.maxFontSize, limits.font.min, limits.font.max)}%"
+							getProgress(preferences.maxFontSize, limits.font.min, limits.font.max)}%"
 					></div>
 
 					<input
 						type="range"
 						min={limits.font.min}
 						max={limits.font.max}
-						bind:value={configState.minFontSize}
+						bind:value={preferences.minFontSize}
 						class="range-input"
 					/>
 					<input
 						type="range"
 						min={limits.font.min}
 						max={limits.font.max}
-						bind:value={configState.maxFontSize}
+						bind:value={preferences.maxFontSize}
 						class="range-input"
 					/>
 				</div>
 
 				<input
 					type="text"
-					value={configState.maxFontSize}
-					oninput={(e) => handleNumericInput(e, (v) => (configState.maxFontSize = v))}
+					value={preferences.maxFontSize}
+					oninput={(e) => handleNumericInput(e, (v) => (preferences.maxFontSize = v))}
 					class="input"
 					class:error={errors.fontMax || errors.fontRange}
 				/>
@@ -73,27 +73,27 @@
 			<button
 				type="button"
 				class="btn"
-				class:primary={configState.theme === 0}
-				class:secondary={configState.theme !== 0}
-				onclick={() => (configState.theme = 0)}
+				class:primary={preferences.theme === 0}
+				class:secondary={preferences.theme !== 0}
+				onclick={() => (preferences.theme = 0)}
 			>
 				<Monitor />
 			</button>
 			<button
 				type="button"
 				class="btn"
-				class:primary={configState.theme === 1}
-				class:secondary={configState.theme !== 1}
-				onclick={() => (configState.theme = 1)}
+				class:primary={preferences.theme === 1}
+				class:secondary={preferences.theme !== 1}
+				onclick={() => (preferences.theme = 1)}
 			>
 				<Sun />
 			</button>
 			<button
 				type="button"
 				class="btn"
-				class:primary={configState.theme === 2}
-				class:secondary={configState.theme !== 2}
-				onclick={() => (configState.theme = 2)}
+				class:primary={preferences.theme === 2}
+				class:secondary={preferences.theme !== 2}
+				onclick={() => (preferences.theme = 2)}
 			>
 				<Moon />
 			</button>

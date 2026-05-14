@@ -9,18 +9,33 @@ function getCtx(): CanvasRenderingContext2D {
 	return _ctx;
 }
 
+// export async function measureWord(
+// 	text: string,
+// 	fontSize: number,
+// 	fontFamily: string
+// ): Promise<{ width: number; ascent: number; descent: number }> {
+// 	await document.fonts.load(`${fontSize}px ${fontFamily}`);
+// 	const ctx = getCtx();
+// 	ctx.font = `${fontSize}px ${fontFamily}`;
+// 	const m = ctx.measureText(text);
+// 	return {
+// 		width: m.width,
+// 		ascent: m.actualBoundingBoxAscent,
+// 		descent: m.actualBoundingBoxDescent,
+// 	};
+// }
+
 export async function measureWord(
 	text: string,
 	fontSize: number,
 	fontFamily: string
-): Promise<{ width: number; ascent: number; descent: number }> {
+) {
 	await document.fonts.load(`${fontSize}px ${fontFamily}`);
 	const ctx = getCtx();
 	ctx.font = `${fontSize}px ${fontFamily}`;
 	const m = ctx.measureText(text);
 	return {
-		width: m.width,
-		ascent: m.actualBoundingBoxAscent,
-		descent: m.actualBoundingBoxDescent,
+		w: m.width,
+		h: m.actualBoundingBoxAscent + m.actualBoundingBoxDescent
 	};
 }

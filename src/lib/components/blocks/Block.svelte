@@ -10,8 +10,8 @@
 	const id = Math.random().toString(36).substring(2, 9);
 </script>
 
-<section class="border-b border-border px-4 py-6">
-	<header class="flex items-center justify-between px-2 text-gray-400">
+<section class="border-b border-border p-6">
+	<header class="flex items-center justify-between text-slate-400">
 		<h2 class="text-xs font-bold tracking-wide uppercase" id="{id}-label">
 			{title}
 		</h2>

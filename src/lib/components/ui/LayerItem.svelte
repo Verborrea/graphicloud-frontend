@@ -5,17 +5,17 @@
 </script>
 
 <label
-	class="group flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-100"
+	class="group -mx-1.5 flex cursor-pointer items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-slate-200"
 >
 	<div class="relative flex items-center">
 		<input
 			{id}
 			type="checkbox"
 			bind:checked
-			class="peer size-5 cursor-pointer appearance-none rounded-md border border-border bg-gray-50 transition-all checked:border-primary checked:bg-primary"
+			class="peer size-5 cursor-pointer appearance-none rounded-md border border-border bg-slate-50 transition-all checked:border-primary checked:bg-primary"
 		/>
 		<svg
-			class="pointer-events-none absolute left-1 size-3 text-gray-50 opacity-0 transition-opacity peer-checked:opacity-100"
+			class="pointer-events-none absolute left-0.75 size-3.5 text-slate-50 opacity-0 transition-opacity peer-checked:opacity-100"
 			fill="none"
 			viewBox="0 0 24 24"
 			stroke="currentColor"

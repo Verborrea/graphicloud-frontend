@@ -4,7 +4,7 @@
 	import Layers from '../blocks/Layers.svelte';
 	import Settings from '../blocks/Settings.svelte';
 	import Preferences from '../blocks/Preferences.svelte';
-	import { configState } from '$lib/state.svelte';
+	import { api } from '$lib/state.svelte';
 
 	let { isSidebarOpen } = $props();
 </script>
@@ -17,7 +17,7 @@
 >
 	<div class="w-[320px]">
 		<Documents />
-		{#if configState.files.length > 0}
+		{#if api.results}
 			<Mode />
 			<Layers />
 			<Settings />

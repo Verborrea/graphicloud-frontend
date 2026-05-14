@@ -1,52 +1,53 @@
 <script lang="ts">
-	import { configState, cloudState } from '$lib/state.svelte';
+	import { gclouds, layers, preferences } from '$lib/state.svelte';
 
-	let { cloudId, isGlobal = false } = $props();
+	let { cloudId, isGlobal = false, offsetX = 0, offsetY = 0 } = $props();
 
 	const cloudData = $derived(
-		isGlobal ? cloudState.global : cloudState.locals.find((l) => l.id === cloudId)
+		isGlobal ? gclouds.global : gclouds.locals.find((l) => l.id === cloudId)
 	);
 
 	const nodes = $derived(cloudData?.nodes ?? []);
-	const cloudColor = $derived(cloudData?.color ?? '#111');
+	const cloudColor = $derived(cloudData?.color ?? '#000000');
 </script>
 
 <g class="word-cloud">
 	{#each nodes as node}
-		{#if configState.layers.bb}
+		{#if layers.bb}
 			<rect
-				x={node.rectX}
-				y={node.rectY}
-				width={node.width}
-				height={node.ascent + node.descent}
+				x={offsetX + node.x - node.w / 2}
+				y={offsetY + node.y - node.h / 2}
+				width={node.w}
+				height={node.h}
 				fill="none"
 				stroke={cloudColor}
 				stroke-width="0.5"
 			/>
 		{/if}
 
-		{#if configState.layers.wc}
-			{#if node.svg}
+		{#if layers.wc}
+			{#if node.icon}
 				<image
 					href="data:image/svg+xml,{encodeURIComponent(
-						(node.svg as string).replace('currentColor', cloudColor)
+						(node.icon as string).replace('currentColor', cloudColor)
 					)}"
-					x={node.x - node.fontSize / 2}
-					y={node.y - node.fontSize}
-					width={node.fontSize}
-					height={node.fontSize}
+					x={offsetX + node.x - node.w / 2}
+					y={offsetY + node.y - node.h / 2}
+					width={node.w}
+					height={node.h}
 				/>
 			{:else}
 				<text
-					x={node.x}
-					y={node.y}
+					x={offsetX + node.x}
+					y={offsetY + node.y}
 					font-size={node.fontSize}
-					font-family={configState.font}
+					font-family={preferences.font}
 					text-anchor="middle"
+					dominant-baseline="middle"
 					fill={cloudColor}
-					class="transition-opacity select-none"
+					class="select-none"
 				>
-					{node.text}
+					{node.texts[0]}
 				</text>
 			{/if}
 		{/if}
