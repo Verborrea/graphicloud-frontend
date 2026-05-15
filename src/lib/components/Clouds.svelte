@@ -1,13 +1,16 @@
 <script lang="ts">
+	import type { GCloud, GCNode, KeyWord } from '$lib/types';
+
 	import * as d3 from 'd3';
 	import WordCloud from './WordCloud.svelte';
 	import { convexHull, myWordle, WORD_CLOUD_PALETTE } from '$lib/utils';
 	import { measureWord } from '$lib/measureWord';
 	import { api, gclouds, lasso, layers, mode, preferences, settings } from '$lib/state.svelte';
-	import type { GCloud, GCNode, KeyWord } from '$lib/types';
 
-	const xScale = $derived(d3.scaleLinear().domain([0, 1]).range([0, 1000]));
-	const yScale = $derived(d3.scaleLinear().domain([0, 1]).range([1000, 0]));
+	let { width, height } = $props();
+
+	const xScale = $derived(d3.scaleLinear().domain([0, 1]).range([0, width]));
+	const yScale = $derived(d3.scaleLinear().domain([0, 1]).range([height, 0]));
 
 	const locals = $derived(api.results?.locals ?? []);
 	const hullPoints = $derived(locals.length >= 3 ? convexHull(locals) : []);
@@ -63,8 +66,8 @@
 			gclouds.global = {
 				id: 'global',
 				color: WORD_CLOUD_PALETTE[0],
-				offsetX: 500,
-				offsetY: 500,
+				offsetX: width / 2,
+				offsetY: height / 2,
 				nodes
 			};
 		} else {
@@ -188,7 +191,7 @@
 
 {#if api.results}
 	{#if mode.mode === 'global'}
-		<WordCloud cloudId="global" isGlobal={true} offsetX={500} offsetY={500} />
+		<WordCloud cloudId="global" isGlobal={true} offsetX={width / 2} offsetY={height / 2} />
 	{:else}
 		{#if layers.hull && hullPoints.length > 0}
 			<path
@@ -201,11 +204,5 @@
 		{#each locals as doc}
 			<WordCloud cloudId={doc.filename} offsetX={xScale(doc.x)} offsetY={yScale(doc.y)} />
 		{/each}
-
-		{#if layers.docs}
-			{#each locals as doc}
-				<circle cx={xScale(doc.x)} cy={yScale(doc.y)} r="8" class="fill-blue-600" />
-			{/each}
-		{/if}
 	{/if}
 {/if}

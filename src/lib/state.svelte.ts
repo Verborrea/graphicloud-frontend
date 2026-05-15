@@ -90,4 +90,4 @@ export const lasso = $state<LassoType>({
 	words: [] as { word: string; score: number; cloudId: string }[],
 	isLoadingImage: false,
 	svg: undefined
-})
+});

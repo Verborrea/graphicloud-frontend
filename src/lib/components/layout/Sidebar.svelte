@@ -18,7 +18,9 @@
 	<div class="w-[320px]">
 		<Documents />
 		{#if api.results}
-			<Mode />
+			{#if api.docs.length >= 2}
+				<Mode />
+			{/if}
 			<Layers />
 			<Settings />
 			<Preferences />

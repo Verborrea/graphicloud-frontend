@@ -8,7 +8,6 @@
 	import SelectionPanel from '$lib/components/layout/SelectionPanel.svelte';
 
 	let isSidebarOpen = $state(true);
-
 	let offset = $state({ x: 0, y: 0 });
 	let scale = $state(1);
 </script>

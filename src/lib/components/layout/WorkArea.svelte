@@ -1,15 +1,22 @@
 <script lang="ts">
+	import * as d3 from 'd3';
 	import { limits } from '$lib/const';
-	import { api, gclouds, lasso, mode } from '$lib/state.svelte';
+	import { api, gclouds, lasso, layers, mode } from '$lib/state.svelte';
 	import { pointInPolygon } from '$lib/utils';
 	import Clouds from '../Clouds.svelte';
+	import Tooltip from '../ui/Tooltip.svelte';
 
 	let { offset = $bindable(), scale = $bindable() } = $props();
 
+	let width = $state(0);
+	let height = $state(0);
 	let container = $state<HTMLDivElement>();
 	let isPanning = $state(false);
 	let startX = $state(0);
 	let startY = $state(0);
+
+	const xScale = $derived(d3.scaleLinear().domain([0, 1]).range([0, width]));
+	const yScale = $derived(d3.scaleLinear().domain([0, 1]).range([height, 0]));
 
 	function toWorld(clientX: number, clientY: number) {
 		if (!container) return { x: 0, y: 0 };
@@ -21,6 +28,13 @@
 		return {
 			x: (canvasX - offset.x) / scale,
 			y: (canvasY - offset.y) / scale
+		};
+	}
+
+	function toScreen(docX: number, docY: number) {
+		return {
+			x: xScale(docX) * scale + offset.x,
+			y: yScale(docY) * scale + offset.y
 		};
 	}
 
@@ -106,6 +120,8 @@
 
 <div
 	bind:this={container}
+	bind:clientWidth={width}
+	bind:clientHeight={height}
 	class="relative h-full flex-1 cursor-grab overflow-hidden bg-white"
 	class:cursor-grabbing={isPanning}
 	class:!cursor-crosshair={lasso.active}
@@ -114,17 +130,44 @@
 	role="presentation"
 	aria-label="Canvas"
 >
-	<svg class="absolute inset-0 size-full">
-		<g transform="translate({offset.x},{offset.y}) scale({scale})">
-			<Clouds />
-			{#if lasso.lassoPoints.length > 1}
-				<polygon
-					points={lasso.lassoPoints.map((p) => `${p.x},${p.y}`).join(' ')}
-					class="fill-primary/10 stroke-primary stroke-[2px]"
-					style="stroke-dasharray: 4;"
-					vector-effect="non-scaling-stroke"
-				/>
-			{/if}
-		</g>
+	<svg class="absolute inset-0 size-full" viewBox={`0 0 ${width} ${height}`}>
+		{#if api.isLoading}
+			<g transform="translate({width / 2} {height / 2})">
+				<circle
+					r="28"
+					class="fill-transparent stroke-slate-300"
+					stroke-width="5"
+					stroke-linecap="round"
+					stroke-dasharray="140 60"
+				>
+					<animateTransform
+						attributeName="transform"
+						type="rotate"
+						from="0"
+						to="360"
+						dur="1s"
+						repeatCount="indefinite"
+					/>
+				</circle>
+			</g>
+		{:else}
+			<g transform="translate({offset.x},{offset.y}) scale({scale})">
+				<Clouds {width} {height} />
+				{#if lasso.lassoPoints.length > 1}
+					<polygon
+						points={lasso.lassoPoints.map((p) => `${p.x},${p.y}`).join(' ')}
+						class="fill-primary/10 stroke-primary stroke-[2px]"
+						style="stroke-dasharray: 4;"
+						vector-effect="non-scaling-stroke"
+					/>
+				{/if}
+			</g>
+		{/if}
 	</svg>
+	{#if mode.mode === 'local' && layers.docs}
+		{#each api.results?.locals ?? [] as doc}
+			{@const pos = toScreen(doc.x, doc.y)}
+			<Tooltip {doc} x={pos.x} y={pos.y} {scale} />
+		{/each}
+	{/if}
 </div>

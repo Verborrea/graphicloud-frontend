@@ -71,10 +71,12 @@
 			api.results = null;
 		}
 	});
+
+	$inspect(api.results).with(console.log);
 </script>
 
 {#if api.docs.length === 0}
-	<section class="flex h-full flex-col gap-4 p-6">
+	<section class="flex min-h-[calc(100vh-75px)] flex-col gap-4 p-6">
 		<h2 class="text-xs leading-5.5 font-bold tracking-wide text-slate-400 uppercase">DOCUMENTS</h2>
 		<div
 			role="button"
