@@ -71,8 +71,6 @@
 			api.results = null;
 		}
 	});
-
-	$inspect(api.results).with(console.log);
 </script>
 
 {#if api.docs.length === 0}

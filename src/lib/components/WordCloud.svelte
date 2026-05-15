@@ -39,11 +39,10 @@
 			{:else}
 				<text
 					x={offsetX + node.x}
-					y={offsetY + node.y}
+					y={offsetY + node.y - node.h / 2 + node.ascent}
 					font-size={node.fontSize}
 					font-family={preferences.font}
 					text-anchor="middle"
-					dominant-baseline="middle"
 					fill={cloudColor}
 					class="select-none"
 				>

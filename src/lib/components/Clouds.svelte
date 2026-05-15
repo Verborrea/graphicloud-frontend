@@ -3,7 +3,7 @@
 
 	import * as d3 from 'd3';
 	import WordCloud from './WordCloud.svelte';
-	import { convexHull, myWordle, WORD_CLOUD_PALETTE } from '$lib/utils';
+	import { cloudBounds, convexHull, myWordle, WORD_CLOUD_PALETTE } from '$lib/utils';
 	import { measureWord } from '$lib/measureWord';
 	import { api, gclouds, lasso, layers, mode, preferences, settings } from '$lib/state.svelte';
 
@@ -23,12 +23,14 @@
 			.curve(d3.curveLinearClosed)
 	);
 
-	async function createNodes(keywords: KeyWord[], font: string): Promise<GCNode[]> {
+	async function createNodes(
+		keywords: KeyWord[],
+		font: string,
+		obstacles: { x: number; y: number; w: number; h: number }[]
+	): Promise<GCNode[]> {
 		const limited = keywords.slice(0, settings.keywordsCount);
 		const algorithm = settings.algorithm;
-
 		const scores = limited.map((k) => k.score);
-
 		const minS = Math.min(...scores);
 		const maxS = Math.max(...scores);
 
@@ -47,12 +49,13 @@
 					score: kw.score,
 					fontSize,
 					w: dims.w,
-					h: dims.h
+					h: dims.h,
+					ascent: dims.ascent
 				};
 			})
 		);
 
-		return myWordle(measured, algorithm);
+		return myWordle(measured, algorithm, obstacles);
 	}
 
 	async function buildClouds() {
@@ -61,29 +64,43 @@
 		if (!results) return;
 
 		if (mode.mode === 'global') {
-			const nodes = await createNodes(results.global, preferences.font);
+			const nodes = await createNodes(results.global, preferences.font, []);
 
 			gclouds.global = {
 				id: 'global',
 				color: WORD_CLOUD_PALETTE[0],
 				offsetX: width / 2,
 				offsetY: height / 2,
-				nodes
+				nodes,
+				radius: 0
 			};
 		} else {
-			const processed: GCloud[] = await Promise.all(
-				results.locals.map(async (doc: any, index: number) => {
-					const nodes = await createNodes(doc.keywords, preferences.font);
+			const processed: GCloud[] = [];
+			for (const [index, doc] of results.locals.entries()) {
+				const myOffsetX = xScale(doc.x);
+				const myOffsetY = yScale(doc.y);
 
+				const obstacles = processed.map((cloud) => {
+					const bounds = cloudBounds(cloud.nodes);
 					return {
-						id: doc.filename,
-						color: WORD_CLOUD_PALETTE[index % WORD_CLOUD_PALETTE.length],
-						offsetX: xScale(doc.x),
-						offsetY: yScale(doc.y),
-						nodes
+						x: cloud.offsetX - myOffsetX + bounds.x,
+						y: cloud.offsetY - myOffsetY + bounds.y,
+						w: bounds.w,
+						h: bounds.h
 					};
-				})
-			);
+				});
+
+				const nodes = await createNodes(doc.keywords, preferences.font, obstacles);
+
+				processed.push({
+					id: doc.filename,
+					color: WORD_CLOUD_PALETTE[index % WORD_CLOUD_PALETTE.length],
+					offsetX: myOffsetX,
+					offsetY: myOffsetY,
+					nodes,
+					radius: 0
+				});
+			}
 
 			gclouds.locals = processed;
 		}
@@ -138,7 +155,8 @@
 					w: fontSize,
 					h: fontSize,
 					x: 0,
-					y: 0
+					y: 0,
+					ascent: 0
 				};
 
 				gclouds.global.nodes = myWordle([...remaining, iconNode], settings.algorithm);
@@ -168,7 +186,8 @@
 				w: fontSize,
 				h: fontSize,
 				x: 0,
-				y: 0
+				y: 0,
+				ascent: 0
 			};
 
 			cloud.nodes = myWordle([...remaining, iconNode], settings.algorithm);

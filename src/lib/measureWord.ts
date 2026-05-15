@@ -34,8 +34,13 @@ export async function measureWord(
 	const ctx = getCtx();
 	ctx.font = `${fontSize}px ${fontFamily}`;
 	const m = ctx.measureText(text);
+
+	const ascent = m.actualBoundingBoxAscent;
+	const descent = m.actualBoundingBoxDescent;
+
 	return {
 		w: m.width,
-		h: m.actualBoundingBoxAscent + m.actualBoundingBoxDescent
+		h: ascent + descent,
+		ascent
 	};
 }

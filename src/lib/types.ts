@@ -18,6 +18,7 @@ export interface GCNode {
 	y: number
 	w: number
 	h: number
+	ascent: number
 
 	score: number
 	fontSize: number
@@ -31,4 +32,5 @@ export interface GCloud {
 	color: string;
 	offsetX: number;
 	offsetY: number;
+	radius: number;
 }

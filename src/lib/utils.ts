@@ -1,4 +1,4 @@
-import type { Result } from "./types";
+import type { GCNode, Result } from "./types";
 
 export function convexHull(points: Result[]) {
 	if (points.length <= 1) return points;
@@ -35,50 +35,36 @@ export function convexHull(points: Result[]) {
 
 export type LayoutNode = {
 	id: string;
-
 	texts: string[];
-
 	score: number;
-
 	fontSize: number;
-
 	w: number;
 	h: number;
-
+	ascent: number;
 	icon?: string;
-};
-
-export type PositionedNode = LayoutNode & {
-	x: number;
-	y: number;
 };
 
 export function myWordle(
 	nodes: LayoutNode[],
-	mode: 'mani' | 'rl' | 'rc'
-): PositionedNode[] {
-	const placedRects: {
-		x: number;
-		y: number;
-		w: number;
-		h: number;
-	}[] = [];
+	mode: 'mani' | 'rl' | 'rc',
+	obstacles: { x: number; y: number; w: number; h: number }[] = []
+): GCNode[] {
+	const placedRects: { x: number; y: number; w: number; h: number }[] = [
+		...obstacles
+	];
 
-	const results: PositionedNode[] = [];
-
+	const results: GCNode[] = [];
 	const sorted = [...nodes].sort((a, b) => b.score - a.score);
 
 	for (const node of sorted) {
 		const w = node.w;
 		const h = node.h;
-
-		let placed = false;
-
-		let t = 0;
-
 		const step = 0.1;
 
-		while (!placed && t < 400) {
+		let placed = false;
+		let t = 0;
+
+		while (!placed && t < 800) {
 			let tx = 0;
 			let ty = 0;
 
@@ -86,23 +72,16 @@ export function myWordle(
 				tx = t * 1.2 * Math.cos(t);
 				ty = t * 1.2 * Math.sin(t);
 			}
-
 			else if (mode === 'rl') {
 				tx = t * 2.5 * Math.cos(t);
 				ty = t * 1.0 * Math.sin(t);
 			}
-
 			else if (mode === 'rc') {
 				tx = Math.pow(t, 1.1) * Math.cos(t) * 1.5;
 				ty = Math.pow(t, 1.1) * Math.sin(t) * 1.5;
 			}
 
-			const candidate = {
-				x: tx - w / 2,
-				y: ty - h / 2,
-				w,
-				h
-			};
+			const candidate = { x: tx - w / 2, y: ty - h / 2, w, h };
 
 			const overlap = placedRects.some((r) =>
 				!(
@@ -115,14 +94,11 @@ export function myWordle(
 
 			if (!overlap) {
 				placedRects.push(candidate);
-
 				results.push({
 					...node,
-
 					x: tx,
 					y: ty
 				});
-
 				placed = true;
 			}
 
@@ -198,4 +174,18 @@ export function pointInPolygon(
 		if (intersect) inside = !inside;
 	}
 	return inside;
+}
+
+export function cloudBounds(nodes: GCNode[]): { x: number; y: number; w: number; h: number } {
+	if (nodes.length === 0) return { x: 0, y: 0, w: 0, h: 0 };
+	const xs = nodes.map((n) => n.x - n.w / 2);
+	const ys = nodes.map((n) => n.y - n.h / 2);
+	const xe = nodes.map((n) => n.x + n.w / 2);
+	const ye = nodes.map((n) => n.y + n.h / 2);
+	return {
+		x: Math.min(...xs),
+		y: Math.min(...ys),
+		w: Math.max(...xe) - Math.min(...xs),
+		h: Math.max(...ye) - Math.min(...ys)
+	};
 }
