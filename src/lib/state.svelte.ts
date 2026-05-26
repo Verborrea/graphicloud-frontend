@@ -24,6 +24,8 @@ interface LayersType {
 interface SettingsType {
 	algorithm: 'mani' | 'rl' | 'rc'
 	keywordsCount: number
+	sortByImportance: boolean
+	generationMode: 'sequential' | 'parallel'
 }
 
 interface LassoType {
@@ -69,6 +71,8 @@ export const layers = $state<LayersType>({
 export const settings = $state<SettingsType>({
 	algorithm: 'mani',
 	keywordsCount: 10,
+	sortByImportance: false,
+	generationMode: 'parallel'
 })
 
 export const preferences = $state<PreferencesType>({

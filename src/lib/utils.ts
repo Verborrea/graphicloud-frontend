@@ -109,6 +109,53 @@ export function myWordle(
 	return results;
 }
 
+export function placeSingleNodeInGlobalSpace(
+	node: any,
+	offsetX: number,
+	offsetY: number,
+	globalPlacedRects: { x: number; y: number; w: number; h: number }[],
+	mode: 'mani' | 'rl' | 'rc'
+): GCNode | null {
+	const w = node.w;
+	const h = node.h;
+	const step = 0.1;
+	let t = 0;
+
+	while (t < 800) {
+		let tx = 0;
+		let ty = 0;
+
+		if (mode === 'mani') {
+			tx = t * 1.2 * Math.cos(t);
+			ty = t * 1.2 * Math.sin(t);
+		} else if (mode === 'rl') {
+			tx = t * 2.5 * Math.cos(t);
+			ty = t * 1.0 * Math.sin(t);
+		} else if (mode === 'rc') {
+			tx = Math.pow(t, 1.1) * Math.cos(t) * 1.5;
+			ty = Math.pow(t, 1.1) * Math.sin(t) * 1.5;
+		}
+
+		const absX = offsetX + tx - w / 2;
+		const absY = offsetY + ty - h / 2;
+
+		const overlap = globalPlacedRects.some(
+			(r) => !(absX > r.x + r.w || absX + w < r.x || absY > r.y + r.h || absY + h < r.y)
+		);
+
+		if (!overlap) {
+			globalPlacedRects.push({ x: absX, y: absY, w, h });
+			return {
+				...node,
+				x: tx,
+				y: ty
+			};
+		}
+		t += step;
+	}
+	return null;
+}
+
 export function handleNumericInput(e: Event, callback: (val: number) => void) {
 	const target = e.target as HTMLInputElement;
 	const cleanValue = target.value.replace(/\D/g, '');
