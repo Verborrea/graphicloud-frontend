@@ -4,6 +4,7 @@
 	import { algorithms, limits } from '$lib/const';
 	import { settings } from '$lib/state.svelte';
 	import { handleNumericInput, getProgress, validateRange } from '$lib/utils';
+	import LayerItem from '../ui/LayerItem.svelte';
 
 	let errors = $derived({
 		keywords:
@@ -59,5 +60,29 @@
 				</p>
 			{/if}
 		</div>
+		<div class="flex flex-col gap-1">
+			<span class="text-sm font-bold">Generation Mode</span>
+			<div class="grid grid-cols-2 gap-2">
+				<button
+					type="button"
+					class="btn"
+					class:primary={settings.generationMode === 'parallel'}
+					class:secondary={settings.generationMode === 'sequential'}
+					onclick={() => (settings.generationMode = 'parallel')}
+				>
+					Parallel
+				</button>
+				<button
+					type="button"
+					class="btn"
+					class:primary={settings.generationMode === 'sequential'}
+					class:secondary={settings.generationMode === 'parallel'}
+					onclick={() => (settings.generationMode = 'sequential')}
+				>
+					Sequential
+				</button>
+			</div>
+		</div>
+		<LayerItem label="Sort by Importance" bind:checked={settings.sortByImportance} />
 	</div>
 </Block>
