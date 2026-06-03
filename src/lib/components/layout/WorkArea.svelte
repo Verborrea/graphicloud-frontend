@@ -170,4 +170,27 @@
 			<Tooltip {doc} x={pos.x} y={pos.y} {scale} />
 		{/each}
 	{/if}
+	{#if lasso.hoveredNode}
+		{@const screenX = lasso.hoveredNode.x * scale + offset.x}
+		{@const screenY = lasso.hoveredNode.y * scale + offset.y}
+
+		<div
+			class="pointer-events-none absolute z-50 rounded-xl border border-slate-200 bg-white/95 p-2 py-1 shadow-md backdrop-blur-sm"
+			style="left: {screenX + 12}px; top: {screenY - 12}px; min-width: 180px;"
+		>
+			<div class="mt-1 flex flex-wrap gap-1">
+				{#each lasso.hoveredNode.texts as word}
+					<span class="rounded bg-slate-100 px-1.5 py-0.5 text-[12px] font-medium text-slate-800">
+						{word}
+					</span>
+				{/each}
+			</div>
+			<hr class="my-1.5 border-slate-200" />
+			<div class="text-[10px] text-slate-500">
+				Score: <span class="font-mono font-semibold text-slate-700"
+					>{lasso.hoveredNode.score.toFixed(4)}</span
+				>
+			</div>
+		</div>
+	{/if}
 </div>

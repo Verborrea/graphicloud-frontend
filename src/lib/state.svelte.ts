@@ -24,6 +24,7 @@ interface LayersType {
 interface SettingsType {
 	algorithm: 'mani' | 'rl' | 'rc'
 	keywordsCount: number
+	iconsCount: number
 	sortByImportance: boolean
 	generationMode: 'sequential' | 'parallel'
 }
@@ -35,6 +36,8 @@ interface LassoType {
 	words: { word: string; score: number; cloudId: string }[],
 	svg: string | undefined,
 	isLoadingImage: boolean,
+	hoveredNode: { texts: string[], score: number, x: number, y: number } | null
+
 }
 
 interface PreferencesType {
@@ -71,6 +74,7 @@ export const layers = $state<LayersType>({
 export const settings = $state<SettingsType>({
 	algorithm: 'mani',
 	keywordsCount: 10,
+	iconsCount: 0,
 	sortByImportance: false,
 	generationMode: 'parallel'
 })
@@ -93,5 +97,6 @@ export const lasso = $state<LassoType>({
 	lassoPoints: [] as { x: number; y: number }[],
 	words: [] as { word: string; score: number; cloudId: string }[],
 	isLoadingImage: false,
-	svg: undefined
+	svg: undefined,
+	hoveredNode: null as { texts: string[], score: number, x: number, y: number } | null
 });

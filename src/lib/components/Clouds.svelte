@@ -4,29 +4,19 @@
 	import WordCloud from './WordCloud.svelte';
 	import {
 		cloudBounds,
-		convexHull,
 		myWordle,
 		placeSingleNodeInGlobalSpace,
 		WORD_CLOUD_PALETTE
 	} from '$lib/utils';
 	import { measureWord } from '$lib/measureWord';
-	import { api, gclouds, lasso, layers, mode, preferences, settings } from '$lib/state.svelte';
+	import { api, gclouds, lasso, mode, preferences, settings } from '$lib/state.svelte';
+	import ConvexHull from './ConvexHull.svelte';
 
 	let { width, height } = $props();
 
 	const xScale = $derived(d3.scaleLinear().domain([0, 1]).range([0, width]));
 	const yScale = $derived(d3.scaleLinear().domain([0, 1]).range([height, 0]));
-
 	const locals = $derived(api.results?.locals ?? []);
-	const hullPoints = $derived(locals.length >= 3 ? convexHull(locals) : []);
-
-	const lineGenerator = $derived(
-		d3
-			.line<any>()
-			.x((d) => xScale(d.x))
-			.y((d) => yScale(d.y))
-			.curve(d3.curveLinearClosed)
-	);
 
 	function getObstaclesForCloud(
 		targetOffsetX: number,
@@ -48,27 +38,78 @@
 
 	async function prepareNodes(keywords: KeyWord[], font: string): Promise<any[]> {
 		const limited = keywords.slice(0, settings.keywordsCount);
+		if (limited.length === 0) return [];
+
 		const scores = limited.map((k) => k.score);
 		const minS = Math.min(...scores);
 		const maxS = Math.max(...scores);
 
+		const sortedCandidates = [...limited].sort((a, b) => b.score - a.score);
+
+		const iconCountTarget =
+			settings.iconsCount > 0 ? Math.min(settings.iconsCount, sortedCandidates.length) : 0;
+		const keywordsForIcons = sortedCandidates.slice(0, iconCountTarget);
+
+		let batchSvgs: (string | null)[] = [];
+
+		if (iconCountTarget > 0 && keywordsForIcons.length > 0) {
+			try {
+				const payload = {
+					groups: keywordsForIcons.map((kw) => [{ word: kw.word, score: kw.score }])
+				};
+
+				const res = await fetch('http://localhost:8000/select-icons-batch/', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
+
+				if (res.ok) {
+					const data = await res.json();
+					batchSvgs = data.icons.map((i: any) => i.svg);
+
+					// errores
+					keywordsForIcons.forEach((kw, index) => {
+						const svgResult = batchSvgs[index];
+						if (!svgResult) {
+							console.warn(`No se pudo reemplazar "${kw.word}"`);
+						}
+					});
+				}
+			} catch (err) {
+				console.error('Error obteniendo lote de íconos:', err);
+			}
+		}
+
 		const measured = await Promise.all(
-			limited.map(async (kw) => {
+			sortedCandidates.map(async (kw, index) => {
 				const fontSize =
 					preferences.minFontSize +
 					((kw.score - minS) / (maxS - minS || 1)) *
 						(preferences.maxFontSize - preferences.minFontSize);
 
-				const dims = await measureWord(kw.word, fontSize, font);
+				const iconSvg = index < iconCountTarget ? batchSvgs[index] : null;
+
+				let w = fontSize;
+				let h = fontSize;
+				let ascent = 0;
+
+				if (!iconSvg) {
+					const dims = await measureWord(kw.word, fontSize, font);
+					w = dims.w;
+					h = dims.h;
+					ascent = dims.ascent;
+				}
 
 				return {
 					id: crypto.randomUUID(),
 					texts: [kw.word],
 					score: kw.score,
 					fontSize,
-					w: dims.w,
-					h: dims.h,
-					ascent: dims.ascent
+					w,
+					h,
+					ascent,
+					icon: iconSvg || undefined
 				};
 			})
 		);
@@ -105,12 +146,12 @@
 		});
 
 		if (settings.generationMode === 'sequential') {
-			// MODO SECUENCIAL
 			const processed: GCloud[] = [];
 			for (const doc of sortedLocals) {
 				const myOffsetX = xScale(doc.x);
 				const myOffsetY = yScale(doc.y);
 				const obstacles = getObstaclesForCloud(myOffsetX, myOffsetY, processed);
+
 				const nodes = await myWordle(
 					await prepareNodes(doc.keywords, preferences.font),
 					settings.algorithm,
@@ -230,6 +271,18 @@
 	}
 
 	$effect(() => {
+		settings.algorithm;
+		// settings.generationMode;
+		// settings.keywordsCount;
+		// settings.sortByImportance;
+		// mode.mode;
+		// preferences.font;
+		// preferences.minFontSize;
+		// preferences.maxFontSize;
+		// api.results;
+		// width;
+		// height;
+
 		buildClouds();
 	});
 
@@ -243,14 +296,7 @@
 	{#if mode.mode === 'global'}
 		<WordCloud cloudId="global" isGlobal={true} offsetX={width / 2} offsetY={height / 2} />
 	{:else}
-		{#if layers.hull && hullPoints.length > 0}
-			<path
-				d={lineGenerator(hullPoints)}
-				class="pointer-events-none fill-blue-400/10 stroke-blue-500/30 stroke-[4px]"
-				style="stroke-dasharray: 10,10"
-			/>
-		{/if}
-
+		<ConvexHull {xScale} {yScale} {locals} />
 		{#each locals as doc}
 			<WordCloud cloudId={doc.filename} offsetX={xScale(doc.x)} offsetY={yScale(doc.y)} />
 		{/each}

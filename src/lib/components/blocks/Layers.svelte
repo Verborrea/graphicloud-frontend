@@ -10,7 +10,7 @@
 			<LayerItem label="Documents" bind:checked={layers.docs} />
 			<LayerItem label="Convex Hull" bind:checked={layers.hull} />
 		{/if}
-		<LayerItem label={mode.mode === 'global' ? 'Cloud' : 'Clouds'} bind:checked={layers.wc} />
+		<LayerItem label="Words" bind:checked={layers.wc} />
 		<LayerItem label="Bounding Boxes" bind:checked={layers.bb} />
 	</div>
 </Block>

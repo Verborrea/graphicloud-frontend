@@ -69,7 +69,7 @@
 				</p>
 			{/if}
 		</div>
-		<div class="grid grid-cols-3 gap-2">
+		<!-- <div class="grid grid-cols-3 gap-2">
 			<button
 				type="button"
 				class="btn"
@@ -97,6 +97,6 @@
 			>
 				<Moon />
 			</button>
-		</div>
+		</div> -->
 	</div>
 </Block>

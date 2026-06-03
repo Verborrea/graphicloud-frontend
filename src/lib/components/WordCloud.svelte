@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { gclouds, layers, preferences } from '$lib/state.svelte';
+	import { gclouds, layers, preferences, lasso } from '$lib/state.svelte';
 
 	let { cloudId, isGlobal = false, offsetX = 0, offsetY = 0 } = $props();
 
@@ -27,15 +27,31 @@
 
 		{#if layers.wc}
 			{#if node.icon}
-				<image
-					href="data:image/svg+xml,{encodeURIComponent(
-						(node.icon as string).replace('currentColor', cloudColor)
-					)}"
-					x={offsetX + node.x - node.w / 2}
-					y={offsetY + node.y - node.h / 2}
-					width={node.w}
-					height={node.h}
-				/>
+				<g
+					class="cursor-pointer"
+					onmouseenter={() => {
+						lasso.hoveredNode = {
+							texts: node.texts,
+							score: node.score,
+							x: offsetX + node.x,
+							y: offsetY + node.y
+						};
+					}}
+					onmouseleave={() => {
+						lasso.hoveredNode = null;
+					}}
+					role="presentation"
+				>
+					<image
+						href="data:image/svg+xml,{encodeURIComponent(
+							(node.icon as string).replace('currentColor', cloudColor)
+						)}"
+						x={offsetX + node.x - node.w / 2}
+						y={offsetY + node.y - node.h / 2}
+						width={node.w}
+						height={node.h}
+					/>
+				</g>
 			{:else}
 				<text
 					x={offsetX + node.x}
