@@ -18,6 +18,8 @@
 	const yScale = $derived(d3.scaleLinear().domain([0, 1]).range([height, 0]));
 	const locals = $derived(api.results?.locals ?? []);
 
+	const ICON_SIZE_MULTIPLIER = 2.5;
+
 	function getObstaclesForCloud(
 		targetOffsetX: number,
 		targetOffsetY: number,
@@ -90,8 +92,8 @@
 
 				const iconSvg = index < iconCountTarget ? batchSvgs[index] : null;
 
-				let w = fontSize;
-				let h = fontSize;
+				let w = fontSize * ICON_SIZE_MULTIPLIER;
+				let h = fontSize * ICON_SIZE_MULTIPLIER;
 				let ascent = 0;
 
 				if (!iconSvg) {
@@ -105,7 +107,7 @@
 					id: crypto.randomUUID(),
 					texts: [kw.word],
 					score: kw.score,
-					fontSize,
+					fontSize: iconSvg ? fontSize * ICON_SIZE_MULTIPLIER : fontSize,
 					w,
 					h,
 					ascent,
