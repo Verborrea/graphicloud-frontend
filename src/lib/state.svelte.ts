@@ -3,11 +3,12 @@ import type { GCloud, KeyWord, Result } from "./types";
 interface ApiType {
 	docs: File[]
 	results: {
-		global: KeyWord[],
-		locals: Result[],
+		global: KeyWord[]
+		locals: Result[]
 		similarity: number | null
-	} | null;
-	isLoading: boolean;
+		errors?: { filename: string; detail: string }[]
+	} | null
+	isLoading: boolean
 }
 
 interface ModeType {
@@ -27,23 +28,24 @@ interface SettingsType {
 	iconsCount: number
 	sortByImportance: boolean
 	generationMode: 'sequential' | 'parallel'
+	clusterize: boolean
 }
 
 interface LassoType {
-	active: boolean,
-	isDrawing: boolean,
-	lassoPoints: { x: number; y: number }[],
-	words: { word: string; score: number; cloudId: string }[],
-	svg: string | undefined,
-	isLoadingImage: boolean,
+	active: boolean
+	isDrawing: boolean
+	lassoPoints: { x: number; y: number }[]
+	words: { word: string; score: number; cloudId: string }[]
+	svg: string | undefined
+	isLoadingImage: boolean
 	hoveredNode: { texts: string[], score: number, x: number, y: number } | null
 
 }
 
 interface PreferencesType {
-	font: string,
-	minFontSize: number,
-	maxFontSize: number,
+	font: string
+	minFontSize: number
+	maxFontSize: number
 	theme: number
 }
 
@@ -76,7 +78,8 @@ export const settings = $state<SettingsType>({
 	keywordsCount: 10,
 	iconsCount: 0,
 	sortByImportance: false,
-	generationMode: 'parallel'
+	generationMode: 'parallel',
+	clusterize: false
 })
 
 export const preferences = $state<PreferencesType>({

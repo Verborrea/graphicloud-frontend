@@ -156,28 +156,23 @@ export function placeSingleNodeInGlobalSpace(
 	return null;
 }
 
-export function handleNumericInput(e: Event, callback: (val: number) => void) {
+export function handleInput(
+	e: Event,
+	callback: (val: number) => void,
+	min?: number,
+	max?: number
+) {
 	const target = e.target as HTMLInputElement;
 	const cleanValue = target.value.replace(/\D/g, '');
-	const numValue = cleanValue === '' ? 0 : Number(cleanValue);
+	let numValue = cleanValue === '' ? 0 : Number(cleanValue);
 
+	if (min && numValue < min)
+		numValue = min;
+	else if (max && numValue > max)
+		numValue = max;
+
+	target.value = numValue.toString();
 	callback(numValue);
-
-	target.value = cleanValue;
-}
-
-export function validateRange(
-	value: number,
-	min: number,
-	max: number,
-	callback: (val: number) => void) {
-	if (value < min) {
-		callback(min);
-	} else if (value > max) {
-		callback(max);
-	} else {
-		callback(value);
-	}
 }
 
 export function getProgress(val: number, min: number, max: number) {

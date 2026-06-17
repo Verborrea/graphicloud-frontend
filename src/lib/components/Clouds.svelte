@@ -18,79 +18,111 @@
 	const yScale = $derived(d3.scaleLinear().domain([0, 1]).range([height, 0]));
 	const locals = $derived(api.results?.locals ?? []);
 
-	const ICON_SIZE_MULTIPLIER = 2.5;
+	const ICON_SIZE_MULTIPLIER = 1.5;
+	const OUTLIER_COLOR = '#9ca3af'; // documentos que HDBSCAN marca como ruido (-1)
 
-	function getObstaclesForCloud(
-		targetOffsetX: number,
-		targetOffsetY: number,
-		otherClouds: GCloud[]
-	) {
-		return otherClouds
-			.filter((cloud) => cloud.nodes && cloud.nodes.length > 0)
-			.map((cloud) => {
-				const bounds = cloudBounds(cloud.nodes);
-				return {
-					x: cloud.offsetX - targetOffsetX + bounds.x,
-					y: cloud.offsetY - targetOffsetY + bounds.y,
-					w: bounds.w,
-					h: bounds.h
-				};
-			});
-	}
+	// ── Token anti-stale ──────────────────────────────────────────────────────
+	// buildClouds es async y sin cancelación: si cambias iconsCount de 5 -> 0,
+	// el build de "0" (sin fetch, instantáneo) termina ANTES que el build de "5"
+	// (que espera la red), y este último sobreescribía gclouds con íconos.
+	// Ese era el bug. Cada build lleva un id; solo el más reciente puede
+	// escribir en gclouds.
+	let buildId = 0;
 
-	async function prepareNodes(keywords: KeyWord[], font: string): Promise<any[]> {
-		const limited = keywords.slice(0, settings.keywordsCount);
-		if (limited.length === 0) return [];
+	// ── Cache de íconos en cliente ────────────────────────────────────────────
+	// Cada keyword resuelta queda memoizada: subir/bajar iconsCount no vuelve
+	// a tocar la red para keywords ya vistas.
+	const iconCache = new Map<string, string | null>();
+	const iconKey = (kw: KeyWord) => `${kw.word.toLowerCase()}|${kw.score.toFixed(4)}`;
 
-		const scores = limited.map((k) => k.score);
-		const minS = Math.min(...scores);
-		const maxS = Math.max(...scores);
+	/**
+	 * Resuelve los SVGs de un conjunto de keywords con UNA sola llamada HTTP
+	 * (solo para las que no están en cache). Devuelve Map<iconKey, svg|null>.
+	 */
+	async function fetchIcons(keywords: KeyWord[]): Promise<Map<string, string | null>> {
+		const out = new Map<string, string | null>();
+		const missing = new Map<string, KeyWord>(); // deduplicado por key
 
-		const sortedCandidates = [...limited].sort((a, b) => b.score - a.score);
-
-		const iconCountTarget =
-			settings.iconsCount > 0 ? Math.min(settings.iconsCount, sortedCandidates.length) : 0;
-		const keywordsForIcons = sortedCandidates.slice(0, iconCountTarget);
-
-		let batchSvgs: (string | null)[] = [];
-
-		if (iconCountTarget > 0 && keywordsForIcons.length > 0) {
-			try {
-				const payload = {
-					groups: keywordsForIcons.map((kw) => [{ word: kw.word, score: kw.score }])
-				};
-
-				const res = await fetch('http://localhost:8000/select-icons-batch/', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(payload)
-				});
-
-				if (res.ok) {
-					const data = await res.json();
-					batchSvgs = data.icons.map((i: any) => i.svg);
-
-					// errores
-					keywordsForIcons.forEach((kw, index) => {
-						const svgResult = batchSvgs[index];
-						if (!svgResult) {
-							console.warn(`No se pudo reemplazar "${kw.word}"`);
-						}
-					});
-				}
-			} catch (err) {
-				console.error('Error obteniendo lote de íconos:', err);
+		for (const kw of keywords) {
+			const key = iconKey(kw);
+			if (iconCache.has(key)) {
+				out.set(key, iconCache.get(key)!);
+			} else if (!missing.has(key)) {
+				missing.set(key, kw);
 			}
 		}
 
+		if (missing.size === 0) return out;
+
+		try {
+			const groups = [...missing.values()].map((kw) => [{ word: kw.word, score: kw.score }]);
+			const res = await fetch('http://localhost:8000/select-icons-batch/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ groups })
+			});
+
+			if (res.ok) {
+				const data = await res.json();
+				[...missing.entries()].forEach(([key, kw], i) => {
+					const svg: string | null = data.icons[i]?.svg ?? null;
+					iconCache.set(key, svg); // se cachean también los null: "sin match" es una respuesta válida
+					out.set(key, svg);
+					if (!svg) console.warn(`Sin ícono para "${kw.word}":`, data.icons[i]?.error);
+				});
+			} else {
+				// Error HTTP: no cachear, para reintentar en el próximo build.
+				for (const key of missing.keys()) out.set(key, null);
+			}
+		} catch (err) {
+			console.error('Error obteniendo lote de íconos:', err);
+			for (const key of missing.keys()) out.set(key, null);
+		}
+
+		return out;
+	}
+
+	// ── Color por cluster ─────────────────────────────────────────────────────
+	function cloudColor(filename: string): string {
+		const docs = api.results?.locals ?? [];
+		const idx = docs.findIndex((l) => l.filename === filename);
+
+		if (settings.clusterize) {
+			const cluster = idx >= 0 ? docs[idx].cluster : null;
+			if (cluster == null || cluster < 0) return OUTLIER_COLOR;
+			return WORD_CLOUD_PALETTE[cluster % WORD_CLOUD_PALETTE.length];
+		}
+		return WORD_CLOUD_PALETTE[(idx >= 0 ? idx : 0) % WORD_CLOUD_PALETTE.length];
+	}
+
+	// ── Construcción de nodos ─────────────────────────────────────────────────
+	function topKeywords(keywords: KeyWord[]) {
+		const limited = keywords.slice(0, settings.keywordsCount);
+		const sorted = [...limited].sort((a, b) => b.score - a.score);
+		const iconCount = settings.iconsCount > 0 ? Math.min(settings.iconsCount, sorted.length) : 0;
+		return { sorted, forIcons: sorted.slice(0, iconCount) };
+	}
+
+	async function prepareNodes(
+		sorted: KeyWord[],
+		iconCount: number,
+		icons: Map<string, string | null>,
+		font: string
+	): Promise<any[]> {
+		if (sorted.length === 0) return [];
+
+		const scores = sorted.map((k) => k.score);
+		const minS = Math.min(...scores);
+		const maxS = Math.max(...scores);
+
 		const measured = await Promise.all(
-			sortedCandidates.map(async (kw, index) => {
+			sorted.map(async (kw, index) => {
 				const fontSize =
 					preferences.minFontSize +
 					((kw.score - minS) / (maxS - minS || 1)) *
 						(preferences.maxFontSize - preferences.minFontSize);
 
-				const iconSvg = index < iconCountTarget ? batchSvgs[index] : null;
+				const iconSvg = index < iconCount ? (icons.get(iconKey(kw)) ?? null) : null;
 
 				let w = fontSize * ICON_SIZE_MULTIPLIER;
 				let h = fontSize * ICON_SIZE_MULTIPLIER;
@@ -119,16 +151,41 @@
 		return measured.sort((a, b) => b.score - a.score);
 	}
 
-	async function buildClouds() {
+	function getObstaclesForCloud(
+		targetOffsetX: number,
+		targetOffsetY: number,
+		otherClouds: GCloud[]
+	) {
+		return otherClouds
+			.filter((cloud) => cloud.nodes && cloud.nodes.length > 0)
+			.map((cloud) => {
+				const bounds = cloudBounds(cloud.nodes);
+				return {
+					x: cloud.offsetX - targetOffsetX + bounds.x,
+					y: cloud.offsetY - targetOffsetY + bounds.y,
+					w: bounds.w,
+					h: bounds.h
+				};
+			});
+	}
+
+	// ── Build principal ───────────────────────────────────────────────────────
+	async function buildClouds(id: number) {
 		const results = api.results;
 		if (!results) return;
 
+		const isStale = () => id !== buildId;
+
+		// ----- Modo global: una nube, una llamada (con cache) -----
 		if (mode.mode === 'global') {
-			const nodes = await myWordle(
-				await prepareNodes(results.global, preferences.font),
-				settings.algorithm,
-				[]
-			);
+			const { sorted, forIcons } = topKeywords(results.global);
+			const icons = await fetchIcons(forIcons);
+			if (isStale()) return;
+
+			const prepared = await prepareNodes(sorted, forIcons.length, icons, preferences.font);
+			const nodes = await myWordle(prepared, settings.algorithm, []);
+			if (isStale()) return;
+
 			gclouds.global = {
 				id: 'global',
 				color: WORD_CLOUD_PALETTE[0],
@@ -140,6 +197,7 @@
 			return;
 		}
 
+		// ----- Modo local -----
 		const sortedLocals = [...results.locals].sort((a, b) => {
 			if (!settings.sortByImportance) return 0;
 			const scoreA = d3.sum(a.keywords, (d) => d.score);
@@ -147,49 +205,56 @@
 			return scoreB - scoreA;
 		});
 
+		// UNA SOLA llamada HTTP para los íconos de TODAS las nubes.
+		// Antes: 1 fetch por nube (100 nubes = 100 requests). Ahora los grupos
+		// de todos los documentos se juntan, se deduplican contra el cache y
+		// viajan en un único batch.
+		const perDoc = sortedLocals.map((doc) => ({ doc, ...topKeywords(doc.keywords) }));
+		const allIconKeywords = perDoc.flatMap((p) => p.forIcons);
+		const icons = await fetchIcons(allIconKeywords);
+		if (isStale()) return;
+
 		if (settings.generationMode === 'sequential') {
 			const processed: GCloud[] = [];
-			for (const doc of sortedLocals) {
+
+			for (const { doc, sorted, forIcons } of perDoc) {
 				const myOffsetX = xScale(doc.x);
 				const myOffsetY = yScale(doc.y);
 				const obstacles = getObstaclesForCloud(myOffsetX, myOffsetY, processed);
 
-				const nodes = await myWordle(
-					await prepareNodes(doc.keywords, preferences.font),
-					settings.algorithm,
-					obstacles
-				);
-				const originalIndex = results.locals.findIndex((l) => l.filename === doc.filename);
+				const prepared = await prepareNodes(sorted, forIcons.length, icons, preferences.font);
+				const nodes = await myWordle(prepared, settings.algorithm, obstacles);
+				if (isStale()) return; // abortar a mitad de lote si llegó un build más nuevo
 
 				processed.push({
 					id: doc.filename,
-					color: WORD_CLOUD_PALETTE[originalIndex % WORD_CLOUD_PALETTE.length],
+					color: cloudColor(doc.filename),
 					offsetX: myOffsetX,
 					offsetY: myOffsetY,
 					nodes,
 					radius: 0
 				});
 			}
+
+			if (isStale()) return;
 			gclouds.locals = processed;
 		} else {
 			// MODO PARALELO SIMULTÁNEO
 			const globalPlacedRects: { x: number; y: number; w: number; h: number }[] = [];
 
 			const cloudBlueprints = await Promise.all(
-				sortedLocals.map(async (doc) => {
-					const originalIndex = results.locals.findIndex((l) => l.filename === doc.filename);
-					return {
-						id: doc.filename,
-						offsetX: xScale(doc.x),
-						offsetY: yScale(doc.y),
-						color: WORD_CLOUD_PALETTE[originalIndex % WORD_CLOUD_PALETTE.length],
-						pendingNodes: await prepareNodes(doc.keywords, preferences.font),
-						nodes: [] as GCNode[]
-					};
-				})
+				perDoc.map(async ({ doc, sorted, forIcons }) => ({
+					id: doc.filename,
+					offsetX: xScale(doc.x),
+					offsetY: yScale(doc.y),
+					color: cloudColor(doc.filename),
+					pendingNodes: await prepareNodes(sorted, forIcons.length, icons, preferences.font),
+					nodes: [] as GCNode[]
+				}))
 			);
+			if (isStale()) return;
 
-			const maxIter = Math.max(...cloudBlueprints.map((c) => c.pendingNodes.length));
+			const maxIter = Math.max(0, ...cloudBlueprints.map((c) => c.pendingNodes.length));
 
 			for (let round = 0; round < maxIter; round++) {
 				for (const blueprint of cloudBlueprints) {
@@ -211,6 +276,7 @@
 				}
 			}
 
+			if (isStale()) return;
 			gclouds.locals = cloudBlueprints.map((b) => ({
 				id: b.id,
 				color: b.color,
@@ -222,9 +288,9 @@
 		}
 	}
 
+	// ── Lasso -> ícono ────────────────────────────────────────────────────────
 	async function replaceSelectionWithIcon() {
 		const selected = [...lasso.words];
-
 		if (selected.length === 0) return;
 
 		const grouped = new Map<string, { words: string[]; score: number }>();
@@ -264,7 +330,9 @@
 			const otherClouds = gclouds.locals.filter((c) => c.id !== cloud.id);
 			const obstacles = getObstaclesForCloud(cloud.offsetX, cloud.offsetY, otherClouds);
 
-			cloud.nodes = myWordle([...remaining, iconNode], settings.algorithm, obstacles);
+			// Bug previo: myWordle devuelve una Promise y se asignaba sin await,
+			// dejando cloud.nodes como Promise en vez de array.
+			cloud.nodes = await myWordle([...remaining, iconNode], settings.algorithm, obstacles);
 		}
 
 		lasso.words = [];
@@ -272,20 +340,35 @@
 		lasso.svg = undefined;
 	}
 
+	// ── Effects ───────────────────────────────────────────────────────────────
+	// Las dependencias se leen SÍNCRONAMENTE aquí. Svelte 5 solo trackea lo
+	// leído antes del primer await: cualquier lectura dentro de buildClouds
+	// posterior a un await es invisible para el effect. Por eso la lista
+	// explícita (lo que tenías comentado era la intención correcta).
 	$effect(() => {
 		settings.algorithm;
-		// settings.generationMode;
-		// settings.keywordsCount;
-		// settings.sortByImportance;
-		// mode.mode;
-		// preferences.font;
-		// preferences.minFontSize;
-		// preferences.maxFontSize;
-		// api.results;
-		// width;
-		// height;
+		settings.generationMode;
+		settings.keywordsCount;
+		settings.iconsCount;
+		settings.sortByImportance;
+		mode.mode;
+		preferences.font;
+		preferences.minFontSize;
+		preferences.maxFontSize;
+		api.results;
+		width;
+		height;
 
-		buildClouds();
+		const myId = ++buildId; // invalida cualquier build en vuelo
+		buildClouds(myId);
+	});
+
+	// Cambiar clusterize SOLO recolorea: no reconstruye nubes ni toca la red.
+	$effect(() => {
+		settings.clusterize;
+		for (const cloud of gclouds.locals) {
+			cloud.color = cloudColor(cloud.id);
+		}
 	});
 
 	$effect(() => {

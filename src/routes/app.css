@@ -70,6 +70,9 @@
 	}
 	.range-input {
 		@apply pointer-events-none absolute h-1.5 w-full appearance-none rounded-full bg-transparent;
+		&.error::-webkit-slider-thumb {
+			@apply border-red-500;
+		}
 	}
 
 	.range-input::-webkit-slider-thumb {

@@ -3,14 +3,8 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import { algorithms, limits } from '$lib/const';
 	import { mode, settings } from '$lib/state.svelte';
-	import { handleNumericInput, getProgress, validateRange } from '$lib/utils';
+	import { handleInput, getProgress } from '$lib/utils';
 	import LayerItem from '../ui/LayerItem.svelte';
-
-	let errors = $derived({
-		keywords:
-			settings.keywordsCount < limits.keywords.min || settings.keywordsCount > limits.keywords.max,
-		icons: settings.iconsCount < limits.icons.min || settings.iconsCount > settings.keywordsCount
-	});
 </script>
 
 <Block title="SETTINGS">
@@ -48,27 +42,16 @@
 				<input
 					type="text"
 					value={settings.keywordsCount}
-					oninput={(e) => {
-						handleNumericInput(e, (v) => {
-							settings.keywordsCount = v;
-							if (settings.iconsCount > v) settings.iconsCount = v;
-						});
-					}}
-					onblur={() => {
-						validateRange(settings.keywordsCount, limits.keywords.min, limits.keywords.max, (v) => {
-							settings.keywordsCount = v;
-							if (settings.iconsCount > v) settings.iconsCount = v;
-						});
-					}}
+					onchange={(e) =>
+						handleInput(
+							e,
+							(v) => (settings.keywordsCount = v),
+							limits.keywords.min,
+							limits.keywords.max
+						)}
 					class="input"
-					class:error={errors.keywords}
 				/>
 			</div>
-			{#if errors.keywords}
-				<p class="text-[10px] text-rose-500">
-					Debe estar entre {limits.keywords.min} y {limits.keywords.max}
-				</p>
-			{/if}
 		</div>
 		<div class="flex flex-col gap-1">
 			<label for="icons" class="text-sm font-bold">Max icons by cloud</label>
@@ -93,27 +76,21 @@
 						)}%, #e5e7eb 100%)"
 					/>
 				</div>
+				<!-- max qty icons -->
 				<span>{settings.keywordsCount}</span>
 				<input
 					type="text"
 					value={settings.iconsCount}
-					oninput={(e) => handleNumericInput(e, (v) => (settings.iconsCount = v))}
-					onblur={() =>
-						validateRange(
-							settings.iconsCount,
-							limits.keywords.min,
-							settings.keywordsCount,
-							(v) => (settings.iconsCount = v)
+					onchange={(e) =>
+						handleInput(
+							e,
+							(v) => (settings.iconsCount = v),
+							limits.icons.min,
+							settings.keywordsCount
 						)}
 					class="input"
-					class:error={errors.icons}
 				/>
 			</div>
-			{#if errors.icons}
-				<p class="text-[10px] text-rose-500">
-					Debe estar entre {limits.keywords.min} y {settings.keywordsCount}
-				</p>
-			{/if}
 		</div>
 		{#if mode.mode === 'local'}
 			<div class="flex flex-col gap-1">
@@ -140,6 +117,7 @@
 				</div>
 			</div>
 			<LayerItem label="Sort by Importance" bind:checked={settings.sortByImportance} />
+			<LayerItem label="Clusterize" bind:checked={settings.clusterize} />
 		{/if}
 	</div>
 </Block>

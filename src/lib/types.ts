@@ -8,6 +8,7 @@ export interface Result {
 	x: number
 	y: number
 	keywords: KeyWord[]
+	cluster?: number | null
 }
 
 export interface GCNode {

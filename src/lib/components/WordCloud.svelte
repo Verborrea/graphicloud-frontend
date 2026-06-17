@@ -9,6 +9,30 @@
 
 	const nodes = $derived(cloudData?.nodes ?? []);
 	const cloudColor = $derived(cloudData?.color ?? '#000000');
+
+	function colorizeSvg(svg: string, color: string): string {
+		let out = svg.replaceAll('currentColor', color);
+
+		// ¿Hay algún fill/stroke "real" (no "none") ya declarado?
+		const hasRealFill = /fill\s*=\s*["'](?!none)/i.test(out);
+		const hasRealStroke = /stroke\s*=\s*["'](?!none)/i.test(out);
+
+		// Sobreescribir fills/strokes explícitos (packs monocromos), preservando
+		// "none" para no romper íconos de contorno (stroke + fill="none").
+		out = out
+			.replace(/fill\s*=\s*"(?!none")[^"]*"/gi, `fill="${color}"`)
+			.replace(/fill\s*=\s*'(?!none')[^']*'/gi, `fill='${color}'`)
+			.replace(/stroke\s*=\s*"(?!none")[^"]*"/gi, `stroke="${color}"`)
+			.replace(/stroke\s*=\s*'(?!none')[^']*'/gi, `stroke='${color}'`);
+
+		// Sin fill ni stroke en ningún lado: forzar fill en el <svg> raíz para que
+		// cascadee a los <path> que heredan (caso Material sin fill).
+		if (!hasRealFill && !hasRealStroke) {
+			out = out.replace(/<svg\b/i, `<svg fill="${color}"`);
+		}
+
+		return out;
+	}
 </script>
 
 <g class="word-cloud">
@@ -44,7 +68,7 @@
 				>
 					<image
 						href="data:image/svg+xml,{encodeURIComponent(
-							(node.icon as string).replace('currentColor', cloudColor)
+							colorizeSvg(node.icon as string, cloudColor)
 						)}"
 						x={offsetX + node.x - node.w / 2}
 						y={offsetY + node.y - node.h / 2}
