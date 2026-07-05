@@ -3,7 +3,7 @@
 	import { limits } from '$lib/const';
 	import { api, gclouds, lasso, layers, mode } from '$lib/state.svelte';
 	import { pointInPolygon } from '$lib/utils';
-	import Clouds from '../Clouds.svelte';
+	import Clouds from '../OldClouds.svelte';
 	import Tooltip from '../ui/Tooltip.svelte';
 
 	let { offset = $bindable(), scale = $bindable() } = $props();

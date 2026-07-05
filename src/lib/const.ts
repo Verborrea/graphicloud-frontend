@@ -6,6 +6,8 @@ export const limits = {
 	icons: { min: 0 }
 };
 
+export const WORLD_SCALE = 1200;
+
 export const zoomSpeed = 0.001;
 
 export const fonts = [

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import Block from '$lib/components/blocks/Block.svelte';
 	import ErrorMessage from '$lib/components/ui/ErrorMessage.svelte';
-	import { api } from '$lib/state.svelte';
+	import { clearIconBitmapCache } from '$lib/iconRaster';
+	import { api, gclouds } from '$lib/state.svelte';
 	import { FileUp, FileText, Trash2, ExternalLink } from '@lucide/svelte';
 
 	let isDragging = $state(false);
@@ -62,6 +63,14 @@
 		} finally {
 			api.isLoading = false;
 		}
+	}
+
+	function clear() {
+		api.docs = [];
+		clearIconBitmapCache();
+		gclouds.global = null;
+		gclouds.locals = [];
+		api.results = null;
 	}
 
 	$effect(() => {
@@ -132,9 +141,7 @@
 			{/each}
 		</div>
 		<div class="mt-2 grid grid-cols-2 gap-2">
-			<button type="button" onclick={() => (api.docs = [])} class="btn destructive">
-				Clear all
-			</button>
+			<button type="button" onclick={clear} class="btn destructive"> Clear all </button>
 			<label class="btn secondary cursor-pointer">
 				<input type="file" multiple accept=".pdf" onchange={handleFileInput} class="hidden" />
 				<span>Upload More</span>

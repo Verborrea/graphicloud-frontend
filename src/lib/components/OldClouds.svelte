@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { GCloud, GCNode, KeyWord } from '$lib/types';
 	import * as d3 from 'd3';
+	import WordCloud from './WordCloud.svelte';
 	import {
 		cloudBounds,
 		myWordle,
@@ -9,26 +10,38 @@
 	} from '$lib/utils';
 	import { measureWord } from '$lib/measureWord';
 	import { api, gclouds, lasso, mode, preferences, settings } from '$lib/state.svelte';
-	import { WORLD_SCALE } from '$lib/const';
+	import ConvexHull from './ConvexHull.svelte';
 
-	// Mundo fijo: las posiciones de las nubes locales (doc.x/doc.y en [0,1])
-	// se esparcen en un espacio de WORLD_SCALE unidades, independiente del
-	// tamaño del viewport. El fit-to-content en Canvas.svelte se encarga de
-	// que esto se vea completo al cargar.
-	const xScale = $derived(d3.scaleLinear().domain([0, 1]).range([0, WORLD_SCALE]));
-	const yScale = $derived(d3.scaleLinear().domain([0, 1]).range([WORLD_SCALE, 0]));
+	let { width, height } = $props();
+
+	const xScale = $derived(d3.scaleLinear().domain([0, 1]).range([0, width]));
+	const yScale = $derived(d3.scaleLinear().domain([0, 1]).range([height, 0]));
+	const locals = $derived(api.results?.locals ?? []);
 
 	const ICON_SIZE_MULTIPLIER = 1.5;
-	const OUTLIER_COLOR = '#9ca3af';
+	const OUTLIER_COLOR = '#9ca3af'; // documentos que HDBSCAN marca como ruido (-1)
 
+	// ── Token anti-stale ──────────────────────────────────────────────────────
+	// buildClouds es async y sin cancelación: si cambias iconsCount de 5 -> 0,
+	// el build de "0" (sin fetch, instantáneo) termina ANTES que el build de "5"
+	// (que espera la red), y este último sobreescribía gclouds con íconos.
+	// Ese era el bug. Cada build lleva un id; solo el más reciente puede
+	// escribir en gclouds.
 	let buildId = 0;
 
+	// ── Cache de íconos en cliente ────────────────────────────────────────────
+	// Cada keyword resuelta queda memoizada: subir/bajar iconsCount no vuelve
+	// a tocar la red para keywords ya vistas.
 	const iconCache = new Map<string, string | null>();
 	const iconKey = (kw: KeyWord) => `${kw.word.toLowerCase()}|${kw.score.toFixed(4)}`;
 
+	/**
+	 * Resuelve los SVGs de un conjunto de keywords con UNA sola llamada HTTP
+	 * (solo para las que no están en cache). Devuelve Map<iconKey, svg|null>.
+	 */
 	async function fetchIcons(keywords: KeyWord[]): Promise<Map<string, string | null>> {
 		const out = new Map<string, string | null>();
-		const missing = new Map<string, KeyWord>();
+		const missing = new Map<string, KeyWord>(); // deduplicado por key
 
 		for (const kw of keywords) {
 			const key = iconKey(kw);
@@ -53,11 +66,12 @@
 				const data = await res.json();
 				[...missing.entries()].forEach(([key, kw], i) => {
 					const svg: string | null = data.icons[i]?.svg ?? null;
-					iconCache.set(key, svg);
+					iconCache.set(key, svg); // se cachean también los null: "sin match" es una respuesta válida
 					out.set(key, svg);
 					if (!svg) console.warn(`Sin ícono para "${kw.word}":`, data.icons[i]?.error);
 				});
 			} else {
+				// Error HTTP: no cachear, para reintentar en el próximo build.
 				for (const key of missing.keys()) out.set(key, null);
 			}
 		} catch (err) {
@@ -68,6 +82,7 @@
 		return out;
 	}
 
+	// ── Color por cluster ─────────────────────────────────────────────────────
 	function cloudColor(filename: string): string {
 		const docs = api.results?.locals ?? [];
 		const idx = docs.findIndex((l) => l.filename === filename);
@@ -80,6 +95,7 @@
 		return WORD_CLOUD_PALETTE[(idx >= 0 ? idx : 0) % WORD_CLOUD_PALETTE.length];
 	}
 
+	// ── Construcción de nodos ─────────────────────────────────────────────────
 	function topKeywords(keywords: KeyWord[]) {
 		const limited = keywords.slice(0, settings.keywordsCount);
 		const sorted = [...limited].sort((a, b) => b.score - a.score);
@@ -153,12 +169,17 @@
 			});
 	}
 
+	// ── Build principal ───────────────────────────────────────────────────────
 	async function buildClouds(id: number) {
 		const results = api.results;
-		if (!results) return;
+		if (!results) {
+			console.log('[DEBUG-1] sin results, abortando');
+			return;
+		}
 
 		const isStale = () => id !== buildId;
 
+		// ----- Modo global: una nube, una llamada (con cache) -----
 		if (mode.mode === 'global') {
 			const { sorted, forIcons } = topKeywords(results.global);
 			const icons = await fetchIcons(forIcons);
@@ -171,13 +192,15 @@
 			gclouds.global = {
 				id: 'global',
 				color: WORD_CLOUD_PALETTE[0],
-				offsetX: 0,
-				offsetY: 0,
+				offsetX: width / 2,
+				offsetY: height / 2,
 				nodes,
 				radius: 0
 			};
 			return;
 		}
+
+		console.log('[DEBUG-2] entrando a modo local, locals.length:', results.locals.length);
 
 		// ----- Modo local -----
 		const sortedLocals = [...results.locals].sort((a, b) => {
@@ -187,10 +210,25 @@
 			return scoreB - scoreA;
 		});
 
+		// UNA SOLA llamada HTTP para los íconos de TODAS las nubes.
+		// Antes: 1 fetch por nube (100 nubes = 100 requests). Ahora los grupos
+		// de todos los documentos se juntan, se deduplican contra el cache y
+		// viajan en un único batch.
 		const perDoc = sortedLocals.map((doc) => ({ doc, ...topKeywords(doc.keywords) }));
 		const allIconKeywords = perDoc.flatMap((p) => p.forIcons);
+		console.log(
+			'[DEBUG-3] allIconKeywords.length:',
+			allIconKeywords.length,
+			'iconsCount setting:',
+			settings.iconsCount
+		);
+
 		const icons = await fetchIcons(allIconKeywords);
-		if (isStale()) return;
+		if (isStale()) {
+			console.log('[DEBUG-4] stale después de fetchIcons, abortando');
+			return;
+		}
+		console.log('[DEBUG-4] fetchIcons resuelto, icons.size:', icons.size);
 
 		if (settings.generationMode === 'sequential') {
 			const processed: GCloud[] = [];
@@ -202,7 +240,7 @@
 
 				const prepared = await prepareNodes(sorted, forIcons.length, icons, preferences.font);
 				const nodes = await myWordle(prepared, settings.algorithm, obstacles);
-				if (isStale()) return;
+				if (isStale()) return; // abortar a mitad de lote si llegó un build más nuevo
 
 				processed.push({
 					id: doc.filename,
@@ -217,6 +255,7 @@
 			if (isStale()) return;
 			gclouds.locals = processed;
 		} else {
+			// MODO PARALELO SIMULTÁNEO
 			const globalPlacedRects: { x: number; y: number; w: number; h: number }[] = [];
 
 			const cloudBlueprints = await Promise.all(
@@ -263,8 +302,10 @@
 				radius: 0
 			}));
 		}
+		console.log('[DEBUG-5] terminó buildClouds, gclouds.locals.length:', gclouds.locals.length);
 	}
 
+	// ── Lasso -> ícono ────────────────────────────────────────────────────────
 	async function replaceSelectionWithIcon() {
 		const selected = [...lasso.words];
 		if (selected.length === 0) return;
@@ -306,6 +347,8 @@
 			const otherClouds = gclouds.locals.filter((c) => c.id !== cloud.id);
 			const obstacles = getObstaclesForCloud(cloud.offsetX, cloud.offsetY, otherClouds);
 
+			// Bug previo: myWordle devuelve una Promise y se asignaba sin await,
+			// dejando cloud.nodes como Promise en vez de array.
 			cloud.nodes = await myWordle([...remaining, iconNode], settings.algorithm, obstacles);
 		}
 
@@ -314,6 +357,11 @@
 		lasso.svg = undefined;
 	}
 
+	// ── Effects ───────────────────────────────────────────────────────────────
+	// Las dependencias se leen SÍNCRONAMENTE aquí. Svelte 5 solo trackea lo
+	// leído antes del primer await: cualquier lectura dentro de buildClouds
+	// posterior a un await es invisible para el effect. Por eso la lista
+	// explícita (lo que tenías comentado era la intención correcta).
 	$effect(() => {
 		settings.algorithm;
 		settings.generationMode;
@@ -325,11 +373,16 @@
 		preferences.minFontSize;
 		preferences.maxFontSize;
 		api.results;
+		width;
+		height;
 
-		const myId = ++buildId;
+		console.log('efecto');
+
+		const myId = ++buildId; // invalida cualquier build en vuelo
 		buildClouds(myId);
 	});
 
+	// Cambiar clusterize SOLO recolorea: no reconstruye nubes ni toca la red.
 	$effect(() => {
 		settings.clusterize;
 		for (const cloud of gclouds.locals) {
@@ -342,3 +395,14 @@
 		replaceSelectionWithIcon();
 	});
 </script>
+
+{#if api.results}
+	{#if mode.mode === 'global'}
+		<WordCloud cloudId="global" isGlobal={true} offsetX={width / 2} offsetY={height / 2} />
+	{:else}
+		<ConvexHull {xScale} {yScale} {locals} />
+		{#each locals as doc}
+			<WordCloud cloudId={doc.filename} offsetX={xScale(doc.x)} offsetY={yScale(doc.y)} />
+		{/each}
+	{/if}
+{/if}

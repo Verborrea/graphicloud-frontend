@@ -84,8 +84,8 @@ export const settings = $state<SettingsType>({
 
 export const preferences = $state<PreferencesType>({
 	font: 'Inter',
-	minFontSize: 12,
-	maxFontSize: 36,
+	minFontSize: 10,
+	maxFontSize: 24,
 	theme: 0
 })
 

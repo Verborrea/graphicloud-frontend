@@ -4,7 +4,7 @@
 	import Layers from '../blocks/Layers.svelte';
 	import Settings from '../blocks/Settings.svelte';
 	import Preferences from '../blocks/Preferences.svelte';
-	import { api } from '$lib/state.svelte';
+	import { api, gclouds } from '$lib/state.svelte';
 
 	let { isSidebarOpen } = $props();
 </script>
@@ -25,5 +25,6 @@
 			<Settings />
 			<Preferences />
 		{/if}
+		<!-- <p>{JSON.stringify(gclouds.locals)}</p> -->
 	</div>
 </aside>
